@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Contact, User
 from app.schemas import ContactCreate, ContactResponse
-from app.auth import get_current_user, require_role
+from app.auth import get_current_user, require_role, get_contact_id_for_user
 
 router = APIRouter(prefix="/api/contacts", tags=["Contacts"])
 
@@ -28,7 +28,10 @@ def list_contacts(
 ):
     query = db.query(Contact)
     if current_user.role == "contact":
-        query = query.filter(Contact.email == current_user.email)
+        contact_id = get_contact_id_for_user(db, current_user)
+        if not contact_id:
+            return []
+        query = query.filter(Contact.id == contact_id)
     elif contact_type:
         query = query.filter(Contact.type == contact_type)
     return query.all()
@@ -42,8 +45,10 @@ def get_contact(
     contact = db.query(Contact).filter(Contact.id == id).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
-    if current_user.role == "contact" and contact.email != current_user.email:
-        raise HTTPException(status_code=403, detail="Access denied")
+    if current_user.role == "contact":
+        contact_id = get_contact_id_for_user(db, current_user)
+        if not contact_id or contact.id != contact_id:
+            raise HTTPException(status_code=403, detail="Access denied")
     return contact
 
 @router.put("/{id}", response_model=ContactResponse)
@@ -51,7 +56,7 @@ def update_contact(
     id: int,
     data: ContactCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+    current_user: User = Depends(require_role(["admin"]))
 ):
     contact = db.query(Contact).filter(Contact.id == id).first()
     if not contact:

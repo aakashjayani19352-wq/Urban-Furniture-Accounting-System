@@ -14,8 +14,11 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
     role = Column(String, default="invoicing_user", nullable=False)
+    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=utc_now)
+
+    contact = relationship("Contact")
 
 class Contact(Base):
     __tablename__ = "contacts"

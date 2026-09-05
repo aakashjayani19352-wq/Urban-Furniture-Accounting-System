@@ -15,7 +15,7 @@ from app.schemas import (
     PurchaseOrderCreate, PurchaseOrderResponse, ConvertToBillRequest,
     SalesOrderCreate, SalesOrderResponse, ConvertToInvoiceRequest
 )
-from app.auth import get_current_user, require_role
+from app.auth import get_current_user, require_role, get_contact_id_for_user
 
 router = APIRouter(prefix="/api", tags=["Transactions & Accounting"])
 
@@ -57,7 +57,11 @@ def create_balanced_entry(db: Session, journal_id: int, lines: list, reference: 
 
 # Chart of Accounts Endpoints
 @router.get("/accounts", response_model=List[AccountResponse])
-def list_accounts(account_type: Optional[str] = None, db: Session = Depends(get_db)):
+def list_accounts(
+    account_type: Optional[str] = None, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+):
     query = db.query(Account)
     if account_type:
         query = query.filter(Account.type == account_type)
@@ -79,12 +83,15 @@ def create_account(
 
 # Journals Endpoints
 @router.get("/journals", response_model=List[JournalResponse])
-def list_journals(db: Session = Depends(get_db)):
+def list_journals(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+):
     return db.query(Journal).all()
 
 # Direct Journal Entry Creation
 @router.post("/transactions/journal-entries", response_model=JournalEntryResponse, status_code=201)
-def create_custom_journal_entry(
+def create_custom_journal_entry(    
     data: JournalEntryCreate, 
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["admin", "invoicing_user"]))
@@ -218,11 +225,16 @@ def record_purchase(
 def record_payment(
     data: PaymentCreate, 
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+    current_user: User = Depends(require_role(["admin", "invoicing_user", "contact"]))
 ):
     invoice = db.query(Invoice).filter(Invoice.id == data.invoice_id).first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Invoice or Bill not found")
+
+    if current_user.role == "contact":
+        contact_id = get_contact_id_for_user(db, current_user)
+        if not contact_id or invoice.contact_id != contact_id:
+            raise HTTPException(status_code=403, detail="Access denied: Invoice does not belong to contact")
 
     if invoice.status == "paid":
         raise HTTPException(status_code=400, detail="Duplicate payment error: Invoice is already fully paid")
@@ -280,14 +292,20 @@ def list_invoices(
 ):
     query = db.query(Invoice)
     if current_user.role == "contact":
-        query = query.join(Contact).filter(Contact.email == current_user.email)
-    elif transaction_type:
+        contact_id = get_contact_id_for_user(db, current_user)
+        if not contact_id:
+            return []
+        query = query.filter(Invoice.contact_id == contact_id)
+    if transaction_type:
         query = query.filter(Invoice.transaction_type == transaction_type)
     return query.order_by(Invoice.date.desc()).all()
 
 # List Journal Entries
 @router.get("/transactions/journal-entries", response_model=List[JournalEntryResponse])
-def list_journal_entries(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_journal_entries(
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+):
     return db.query(JournalEntry).order_by(JournalEntry.date.desc()).all()
 
 # Create Journal
@@ -308,7 +326,10 @@ def create_journal(
 def list_purchase_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(PurchaseOrder)
     if current_user.role == "contact":
-        query = query.join(Contact).filter(Contact.email == current_user.email)
+        contact_id = get_contact_id_for_user(db, current_user)
+        if not contact_id:
+            return []
+        query = query.filter(PurchaseOrder.vendor_id == contact_id)
     return query.order_by(PurchaseOrder.created_at.desc()).all()
 
 @router.post("/purchase-orders", response_model=PurchaseOrderResponse, status_code=201)
@@ -400,7 +421,10 @@ def convert_po_to_bill(
 def list_sales_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(SalesOrder)
     if current_user.role == "contact":
-        query = query.join(Contact).filter(Contact.email == current_user.email)
+        contact_id = get_contact_id_for_user(db, current_user)
+        if not contact_id:
+            return []
+        query = query.filter(SalesOrder.customer_id == contact_id)
     return query.order_by(SalesOrder.created_at.desc()).all()
 
 @router.post("/sales-orders", response_model=SalesOrderResponse, status_code=201)

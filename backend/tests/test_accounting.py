@@ -198,3 +198,141 @@ def test_sales_order_to_invoice_and_payment_flow():
     assert res_pay.status_code == 201
     assert res_pay.json()["invoice_status"] == "paid"
 
+def test_contact_role_restrictions_and_payment_flow():
+    db = SessionLocal()
+    # Create contact user matching existing customer (cust@test.com)
+    contact_user = User(
+        email="cust@test.com",
+        hashed_password=hash_password("cust123"),
+        full_name="Test Customer User",
+        role="contact"
+    )
+    # Create another contact user
+    other_contact = Contact(name="Other Contact", type="customer", email="other@test.com")
+    db.add(other_contact)
+    db.flush()
+    other_user = User(
+        email="other@test.com",
+        hashed_password=hash_password("other123"),
+        full_name="Other User",
+        role="contact"
+    )
+    db.add_all([contact_user, other_user])
+    db.commit()
+
+    # Create sale invoice for Test Customer (cust@test.com)
+    admin_token = get_auth_token()
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    sale_res = client.post("/api/transactions/sale", json={
+        "customer_id": 1,
+        "product_id": 1,
+        "quantity": 1,
+        "unit_price": 500.0,
+        "tax": 0.0,
+        "payment_method": None
+    }, headers=admin_headers)
+    inv_cust = sale_res.json()
+
+    # Create sale invoice for Other Contact (other@test.com)
+    sale_other_res = client.post("/api/transactions/sale", json={
+        "customer_id": other_contact.id,
+        "product_id": 1,
+        "quantity": 1,
+        "unit_price": 500.0,
+        "tax": 0.0,
+        "payment_method": None
+    }, headers=admin_headers)
+    inv_other = sale_other_res.json()
+
+    # Login as contact user (cust@test.com)
+    login_res = client.post("/api/auth/login", json={"email": "cust@test.com", "password": "cust123"})
+    cust_token = login_res.json()["access_token"]
+    cust_headers = {"Authorization": f"Bearer {cust_token}"}
+
+    # 1. Contact list invoices returns ONLY their own invoice
+    res_invs = client.get("/api/transactions/invoices", headers=cust_headers)
+    assert res_invs.status_code == 200
+    inv_ids = [i["id"] for i in res_invs.json()]
+    assert inv_cust["id"] in inv_ids
+    assert inv_other["id"] not in inv_ids
+
+    # 2. Contact cannot access internal reports (403 Forbidden)
+    res_rep = client.get("/api/reports/profit-loss", headers=cust_headers)
+    assert res_rep.status_code == 403
+
+    # 3. Contact CAN pay their own invoice
+    res_pay_own = client.post("/api/transactions/payment", json={
+        "invoice_id": inv_cust["id"],
+        "payment_method": "bank",
+        "amount": 500.0
+    }, headers=cust_headers)
+    assert res_pay_own.status_code == 201
+    assert res_pay_own.json()["invoice_status"] == "paid"
+
+    # 4. Contact CANNOT pay someone else's invoice (403 Forbidden)
+    res_pay_other = client.post("/api/transactions/payment", json={
+        "invoice_id": inv_other["id"],
+        "payment_method": "bank",
+        "amount": 500.0
+    }, headers=cust_headers)
+    assert res_pay_other.status_code == 403
+
+    db.close()
+
+def test_accountant_vs_admin_master_data_permissions():
+    db = SessionLocal()
+    # Create accountant user
+    acc_user = User(
+        email="acc@test.com",
+        hashed_password=hash_password("acc123"),
+        full_name="Accountant Test User",
+        role="invoicing_user"
+    )
+    db.add(acc_user)
+    db.commit()
+
+    # Login as Accountant
+    acc_login = client.post("/api/auth/login", json={"email": "acc@test.com", "password": "acc123"})
+    acc_token = acc_login.json()["access_token"]
+    acc_headers = {"Authorization": f"Bearer {acc_token}"}
+
+    # 1. Accountant CAN create master data (Contact)
+    create_res = client.post("/api/contacts", json={
+        "name": "Accountant Created Contact",
+        "type": "customer",
+        "email": "acccreated@test.com"
+    }, headers=acc_headers)
+    assert create_res.status_code == 201
+    contact_id = create_res.json()["id"]
+
+    # 2. Accountant CANNOT modify master data (PUT /api/contacts/{id} -> 403 Forbidden)
+    update_res = client.put(f"/api/contacts/{contact_id}", json={
+        "name": "Modified Contact Name",
+        "type": "customer",
+        "email": "acccreated@test.com"
+    }, headers=acc_headers)
+    assert update_res.status_code == 403
+
+    # 3. Accountant CANNOT archive/delete master data (DELETE /api/contacts/{id} -> 403 Forbidden)
+    delete_res = client.delete(f"/api/contacts/{contact_id}", headers=acc_headers)
+    assert delete_res.status_code == 403
+
+    # 4. Admin CAN modify master data (PUT /api/contacts/{id} -> 200 OK)
+    admin_token = get_auth_token()
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    admin_update = client.put(f"/api/contacts/{contact_id}", json={
+        "name": "Admin Modified Contact Name",
+        "type": "customer",
+        "email": "acccreated@test.com"
+    }, headers=admin_headers)
+    assert admin_update.status_code == 200
+    assert admin_update.json()["name"] == "Admin Modified Contact Name"
+
+    # 5. Admin CAN delete master data (DELETE /api/contacts/{id} -> 204 No Content)
+    admin_delete = client.delete(f"/api/contacts/{contact_id}", headers=admin_headers)
+    assert admin_delete.status_code == 204
+
+    db.close()
+
+
+

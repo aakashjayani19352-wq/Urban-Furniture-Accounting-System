@@ -12,7 +12,10 @@ from app.auth import get_current_user, require_role
 router = APIRouter(prefix="/api", tags=["Analytic Accounts & Budgets"])
 
 @router.get("/analytic-accounts", response_model=List[AnalyticAccountResponse])
-def list_analytic_accounts(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_analytic_accounts(
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+):
     return db.query(AnalyticAccount).order_by(AnalyticAccount.name.asc()).all()
 
 @router.post("/analytic-accounts", response_model=AnalyticAccountResponse, status_code=201)
@@ -28,7 +31,10 @@ def create_analytic_account(
     return account
 
 @router.get("/budgets", response_model=List[BudgetResponse])
-def list_budgets(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_budgets(
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+):
     return db.query(Budget).order_by(Budget.created_at.desc()).all()
 
 @router.post("/budgets", response_model=BudgetResponse, status_code=201)

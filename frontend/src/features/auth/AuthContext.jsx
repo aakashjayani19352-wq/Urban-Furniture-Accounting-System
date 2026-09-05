@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }) => {
     const newUser = { email, role: formattedRole, full_name: name };
     setUser(newUser);
     localStorage.setItem('user', JSON.stringify(newUser));
+    return newUser;
   };
 
   const logout = () => {

@@ -55,3 +55,11 @@ def require_role(allowed_roles: List[str]):
         return current_user
     return role_checker
 
+def get_contact_id_for_user(db: Session, user: User) -> Optional[int]:
+    if hasattr(user, "contact_id") and getattr(user, "contact_id", None) is not None:
+        return getattr(user, "contact_id")
+    from app.models import Contact
+    contact = db.query(Contact).filter(Contact.email == user.email).first()
+    return contact.id if contact else None
+
+

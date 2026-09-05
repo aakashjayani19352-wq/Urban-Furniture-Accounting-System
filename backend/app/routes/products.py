@@ -25,7 +25,7 @@ def list_products(
     category: Optional[str] = None,
     product_type: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
     query = db.query(Product)
     if category:
@@ -38,7 +38,7 @@ def list_products(
 def get_product(
     id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
     product = db.query(Product).filter(Product.id == id).first()
     if not product:
@@ -50,7 +50,7 @@ def update_product(
     id: int,
     data: ProductCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_role(["admin", "invoicing_user"]))
+    current_user: User = Depends(require_role(["admin"]))
 ):
     product = db.query(Product).filter(Product.id == id).first()
     if not product:
