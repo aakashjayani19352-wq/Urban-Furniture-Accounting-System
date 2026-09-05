@@ -20,7 +20,7 @@ In addition to core ledgers, the platform includes **Analytic Accounting & Cost 
 | Contributor | GitHub Handle | Core Responsibility |
 |---|---|---|
 | **Aakash Jayani** | [@aakashjayani19352-wq](https://github.com/aakashjayani19352-wq) | **Full-Stack Lead & Integration**: Complete frontend UI/UX, 19 interactive screens & modals, Recharts dashboards, API client, repository architecture & integration. |
-| **Chandan Shah** | [@chandan-shah226]([https://github.com/cshah0220226](https://github.com/chandan-shah226)) | **Backend Core & Architecture**: FastAPI application setup, SQLite/PostgreSQL database models, RESTful endpoints, seed data engine, JWT authentication & RBAC. |
+| **Chandan Shah** | [@chandan-shah226]([(https://github.com/chandan-shah226)) | **Backend Core & Architecture**: FastAPI application setup, SQLite/PostgreSQL database models, RESTful endpoints, seed data engine, JWT authentication & RBAC. |
 | **Rudra Patel** | [@rudraop922](https://github.com/rudraop922) | **Ledger & Accounting Engine**: Double-entry journal entry generation, transactional integrity validation, automated document posting workflows, and testing suites. |
 
 ---
