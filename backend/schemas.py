@@ -76,6 +76,25 @@ class ContactCreate(BaseModel):
 class ContactOut(DBBase, ContactCreate):
     pass
 
+class PurchaseOrderCreate(BaseModel):
+    vendor_id: int
+    product_id: int
+    qty: int
+    unit_price: float
+
+class PurchaseOrderOut(DBBase, PurchaseOrderCreate):
+    status: str
+
+class VendorBillCreate(BaseModel):
+    invoice_date: date
+    due_date: date
+
+class VendorBillOut(DBBase):
+    purchase_order_id: int
+    invoice_date: date
+    due_date: date
+    status: str
+
 class SalesOrderCreate(BaseModel):
     customer_id: int
     product_id: int
@@ -86,8 +105,21 @@ class SalesOrderCreate(BaseModel):
 class SalesOrderOut(DBBase, SalesOrderCreate):
     status: str
 
+class CustomerInvoiceCreate(BaseModel):
+    invoice_date: date
+    due_date: date
+
+class CustomerInvoiceOut(DBBase):
+    sales_order_id: int
+    invoice_date: date
+    due_date: date
+    status: str
+
 class PaymentCreate(BaseModel):
     amount: float
     date: date
-    payment_type: str
-    reference_id: int
+    payment_type: str # Customer Payment, Vendor Payment
+    reference_id: int # Bill ID or Invoice ID
+
+class PaymentOut(DBBase, PaymentCreate):
+    pass

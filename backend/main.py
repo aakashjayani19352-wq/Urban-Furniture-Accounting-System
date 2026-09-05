@@ -3,10 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import engine, Base, get_db
 from . import models, schemas
-from .routers import auth, transactions, reports, master_data
+from .routers import auth, transactions, reports, master_data, documents
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Create tables (we will use alembic in production, but this is fine for dev)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Urban Furniture Accounting System")
 
@@ -21,6 +21,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(master_data.router, prefix="/api/master-data", tags=["Master Data"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["Transactions"])
+app.include_router(documents.router, prefix="/api/documents", tags=["Documents"])
 app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 
 @app.get("/")

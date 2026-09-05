@@ -1,5 +1,6 @@
 import React from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import StatCard from '../components/StatCard'
 
 const data = [
   { name: 'Jan', revenue: 4000, expenses: 2400 },
@@ -16,18 +17,9 @@ export default function Dashboard() {
       <h2 className="text-3xl font-bold mb-6">Dashboard</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Total Cash</h3>
-          <p className="text-3xl font-bold text-gray-800">$45,231.89</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Unpaid Invoices</h3>
-          <p className="text-3xl font-bold text-gray-800">$12,045.00</p>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Unpaid Bills</h3>
-          <p className="text-3xl font-bold text-gray-800">$8,930.00</p>
-        </div>
+        <StatCard title="Total Cash" value="$45,231.89" />
+        <StatCard title="Unpaid Invoices" value="$12,045.00" />
+        <StatCard title="Unpaid Bills" value="$8,930.00" />
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
