@@ -13,6 +13,12 @@ import SalesOrderForm from './features/sales/SalesOrderForm';
 import BudgetReport from './features/reports/BudgetReport';
 import ChartOfAccountsList from './features/accounts/ChartOfAccountsList';
 import ChartOfAccountsForm from './features/accounts/ChartOfAccountsForm';
+import JournalList from './features/accounts/JournalList';
+import JournalForm from './features/accounts/JournalForm';
+import JournalEntryList from './features/accounts/JournalEntryList';
+import BudgetList from './features/budgets/BudgetList';
+import BalanceSheet from './features/reports/BalanceSheet';
+import ProfitLoss from './features/reports/ProfitLoss';
 import DashboardHome from './features/dashboard/DashboardHome';
 
 function PrivateRoute({ children }) {
@@ -36,10 +42,17 @@ function App() {
             <Route path="purchases/new" element={<PurchaseOrderForm />} />
             <Route path="sales" element={<SalesOrderList />} />
             <Route path="sales/new" element={<SalesOrderForm />} />
-            <Route path="budgets" element={<div>Budgets</div>} />
+            <Route path="budgets" element={<BudgetList />} />
+            <Route path="budgets/new" element={<div className="p-6 bg-white rounded shadow">New Budget Form (TODO)</div>} />
+            <Route path="budgets/analytic" element={<div className="p-6 bg-white rounded shadow">Analytic Accounts (TODO)</div>} />
             <Route path="accounts" element={<ChartOfAccountsList />} />
             <Route path="accounts/new" element={<ChartOfAccountsForm />} />
+            <Route path="journals" element={<JournalList />} />
+            <Route path="journals/new" element={<JournalForm />} />
+            <Route path="journal-entries" element={<JournalEntryList />} />
             <Route path="reports" element={<BudgetReport />} />
+            <Route path="reports/balance-sheet" element={<BalanceSheet />} />
+            <Route path="reports/profit-loss" element={<ProfitLoss />} />
           </Route>
         </Routes>
       </Router>
