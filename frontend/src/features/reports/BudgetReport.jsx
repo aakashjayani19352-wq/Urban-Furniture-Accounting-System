@@ -22,4 +22,4 @@ export default function BudgetReport() {
       </BarChart>
     </div>
   );
-}\n
+}

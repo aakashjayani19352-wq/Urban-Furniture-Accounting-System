@@ -12,4 +12,4 @@ export default function ChartOfAccountsList() {
       </div>
     </div>
   );
-}\n
+}

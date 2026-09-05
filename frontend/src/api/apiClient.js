@@ -4,4 +4,4 @@ export const apiClient = {
   post: async (url, data) => { console.log('POST', url, data); return { data }; },
   put: async (url, data) => { console.log('PUT', url, data); return { data }; },
   delete: async (url) => { console.log('DELETE', url); return { data: true }; },
-};\n
+};

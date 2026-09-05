@@ -31,4 +31,4 @@ export default function Login() {
       </div>
     </div>
   );
-}\n
+}

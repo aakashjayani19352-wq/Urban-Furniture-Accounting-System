@@ -34,4 +34,4 @@ export default function ChartOfAccountsForm() {
       </form>
     </div>
   );
-}\n
+}

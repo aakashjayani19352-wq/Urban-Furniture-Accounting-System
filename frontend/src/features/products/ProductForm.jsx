@@ -28,4 +28,4 @@ export default function ProductForm() {
       </form>
     </div>
   );
-}\n
+}
