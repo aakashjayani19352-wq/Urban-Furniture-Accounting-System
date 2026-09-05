@@ -13,6 +13,7 @@ import SalesOrderForm from './features/sales/SalesOrderForm';
 import BudgetReport from './features/reports/BudgetReport';
 import ChartOfAccountsList from './features/accounts/ChartOfAccountsList';
 import ChartOfAccountsForm from './features/accounts/ChartOfAccountsForm';
+import DashboardHome from './features/dashboard/DashboardHome';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -26,7 +27,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
-            <Route index element={<div>Dashboard Home</div>} />
+            <Route index element={<DashboardHome />} />
             <Route path="contacts" element={<ContactList />} />
             <Route path="contacts/new" element={<ContactForm />} />
             <Route path="products" element={<ProductList />} />

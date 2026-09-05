@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({ name: '', email: '', type: 'Customer' });
+  const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
@@ -10,12 +11,20 @@ export default function ContactForm() {
     if (!formData.name || !formData.email) return alert('Name and email required');
     // TODO: POST /api/contacts
     console.log('Saving', formData);
-    navigate('/contacts');
+    
+    // Show success message
+    setShowSuccess(true);
+    setTimeout(() => navigate('/contacts'), 1500);
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Add Contact</h2>
+    <div className="bg-white p-6 rounded shadow relative">
+      {showSuccess && (
+        <div className="absolute top-0 left-0 w-full bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-t mb-4">
+          ✅ Contact saved successfully! Redirecting...
+        </div>
+      )}
+      <h2 className="text-xl font-bold mb-4 mt-2">Add Contact</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block">Name *</label>
