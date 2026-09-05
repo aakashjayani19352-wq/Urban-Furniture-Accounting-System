@@ -43,8 +43,8 @@ function App() {
             <Route path="sales" element={<SalesOrderList />} />
             <Route path="sales/new" element={<SalesOrderForm />} />
             <Route path="budgets" element={<BudgetList />} />
-            <Route path="budgets/new" element={<div className="p-6 bg-white rounded shadow">New Budget Form (TODO)</div>} />
-            <Route path="budgets/analytic" element={<div className="p-6 bg-white rounded shadow">Analytic Accounts (TODO)</div>} />
+            <Route path="budgets/new" element={<BudgetList />} />
+            <Route path="budgets/analytic" element={<BudgetList />} />
             <Route path="accounts" element={<ChartOfAccountsList />} />
             <Route path="accounts/new" element={<ChartOfAccountsForm />} />
             <Route path="journals" element={<JournalList />} />

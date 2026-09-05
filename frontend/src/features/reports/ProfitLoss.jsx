@@ -1,77 +1,151 @@
-import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { useState, useEffect } from 'react';
+import { PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { apiClient } from '../../api/apiClient';
 
-const incomeData = [
-  { name: 'Sales Revenue', value: 15000 },
-  { name: 'Service Revenue', value: 3000 },
-];
-
-const expenseData = [
-  { name: 'Cost of Goods Sold', value: 6000 },
-  { name: 'Rent', value: 2000 },
-  { name: 'Salaries', value: 4500 },
-  { name: 'Utilities', value: 500 },
-];
-
-const monthlyData = [
-  { month: 'Jan', Income: 4000, Expenses: 2400 },
-  { month: 'Feb', Income: 3000, Expenses: 1398 },
-  { month: 'Mar', Income: 11000, Expenses: 9200 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 export default function ProfitLoss() {
-  const totalIncome = incomeData.reduce((acc, curr) => acc + curr.value, 0);
-  const totalExpenses = expenseData.reduce((acc, curr) => acc + curr.value, 0);
-  const netProfit = totalIncome - totalExpenses;
+  const [report, setReport] = useState({
+    total_revenue: 0,
+    total_expenses: 0,
+    net_profit: 0,
+    revenue_breakdown: [],
+    expense_breakdown: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient.get('/reports/profit-loss').then(res => {
+      if (res.data) setReport(res.data);
+      setLoading(false);
+    });
+  }, []);
+
+  const expenseChartData = (report.expense_breakdown || []).map(e => ({
+    name: e.account_name,
+    value: Math.abs(e.amount)
+  }));
+
+  const revenueExpenseComparison = [
+    { category: 'Total Figures', Revenue: report.total_revenue || 0, Expenses: report.total_expenses || 0, 'Net Profit': report.net_profit || 0 }
+  ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Profit & Loss Statement</h1>
-      
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
-          <h3 className="text-gray-500 text-sm font-medium uppercase">Total Income</h3>
-          <p className="text-3xl font-bold text-green-600 mt-2">${totalIncome.toLocaleString()}</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="page-heading">Profit & Loss (P&L) Statement</h1>
+          <p className="page-subtitle">Operating income from product sales minus purchases and expenses.</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
-          <h3 className="text-gray-500 text-sm font-medium uppercase">Total Expenses</h3>
-          <p className="text-3xl font-bold text-red-600 mt-2">${totalExpenses.toLocaleString()}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
-          <h3 className="text-gray-500 text-sm font-medium uppercase">Net Profit</h3>
-          <p className="text-3xl font-bold text-blue-600 mt-2">${netProfit.toLocaleString()}</p>
+        <div className="text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border">
+          Real-time general ledger calculation
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="surface p-6 border-t-4 border-t-emerald-500">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Revenue / Income</h3>
+          <p className="mt-2 text-3xl font-bold text-emerald-600">${Number(report.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-1 text-xs text-slate-500">Sales orders & recognized income</p>
+        </div>
+        <div className="surface p-6 border-t-4 border-t-red-500">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Operating Expenses</h3>
+          <p className="mt-2 text-3xl font-bold text-red-600">${Number(report.total_expenses || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-1 text-xs text-slate-500">COGS, vendor bills & operating costs</p>
+        </div>
+        <div className="surface p-6 border-t-4 border-t-blue-500">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Net Profit</h3>
+          <p className={`mt-2 text-3xl font-bold ${report.net_profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+            ${Number(report.net_profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {report.total_revenue > 0 ? `${((report.net_profit / report.total_revenue) * 100).toFixed(1)}% profit margin` : '0% margin'}
+          </p>
+        </div>
+      </div>
+
+      {/* Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expenses Breakdown */}
-        <div className="bg-white p-6 rounded shadow flex flex-col items-center">
-          <h2 className="text-lg font-bold mb-4 w-full text-left">Expenses Breakdown</h2>
-          <PieChart width={400} height={300}>
-            <Pie data={expenseData} cx={200} cy={150} innerRadius={60} outerRadius={100} fill="#8884d8" paddingAngle={5} dataKey="value">
-              {expenseData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => `$${value}`} />
-            <Legend />
-          </PieChart>
+        <div className="surface p-6">
+          <h2 className="text-base font-bold text-slate-900 mb-4">Expenses Breakdown</h2>
+          {expenseChartData.length === 0 ? (
+            <div className="h-64 flex items-center justify-center text-slate-400">No expense lines recorded</div>
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={expenseChartData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                    {expenseChartData.map((_, index) => (
+                      <Cell key={`cell-exp-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
-        {/* Monthly Trend */}
-        <div className="bg-white p-6 rounded shadow flex flex-col items-center">
-          <h2 className="text-lg font-bold mb-4 w-full text-left">Income vs Expenses (Q1)</h2>
-          <BarChart width={400} height={300} data={monthlyData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="month" />
-            <YAxis />
-            <Tooltip formatter={(value) => `$${value}`} />
-            <Legend />
-            <Bar dataKey="Income" fill="#00C49F" />
-            <Bar dataKey="Expenses" fill="#FF8042" />
-          </BarChart>
+        <div className="surface p-6">
+          <h2 className="text-base font-bold text-slate-900 mb-4">Income vs Expense Comparison</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={revenueExpenseComparison}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis />
+                <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
+                <Bar dataKey="Revenue" fill="#10b981" />
+                <Bar dataKey="Expenses" fill="#ef4444" />
+                <Bar dataKey="Net Profit" fill="#2563eb" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Breakdown Tables */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="surface">
+          <div className="bg-slate-50 px-6 py-3 border-b font-bold text-slate-800 text-sm">Revenue Accounts</div>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th className="text-right">Total ($)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.revenue_breakdown?.map((r, i) => (
+                <tr key={i}>
+                  <td>{r.account_code} - {r.account_name}</td>
+                  <td className="text-right font-semibold text-emerald-600">${Number(r.amount).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="surface">
+          <div className="bg-slate-50 px-6 py-3 border-b font-bold text-slate-800 text-sm">Expense Accounts</div>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th className="text-right">Total ($)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.expense_breakdown?.map((e, i) => (
+                <tr key={i}>
+                  <td>{e.account_code} - {e.account_name}</td>
+                  <td className="text-right font-semibold text-red-600">${Number(e.amount).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

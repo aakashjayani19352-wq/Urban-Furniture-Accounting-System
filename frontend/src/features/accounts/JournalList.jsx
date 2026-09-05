@@ -1,14 +1,63 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { apiClient } from '../../api/apiClient';
 
 export default function JournalList() {
+  const [journals, setJournals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiClient.get('/journals').then(res => {
+      setJournals(res.data || []);
+      setLoading(false);
+    });
+  }, []);
+
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Journals</h1>
-        <Link to="/journals/new" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition">New Journal</Link>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div>
+          <h1 className="page-heading">Financial Journals</h1>
+          <p className="page-subtitle">Organize and group transactions into dedicated books (Sales, Purchase, Bank, Cash, General).</p>
+        </div>
+        <Link to="/journals/new" className="primary-button">+ New Journal</Link>
       </div>
-      <div className="bg-white rounded-lg shadow p-6 text-gray-500">
-        <p>List of journals (Sales, Purchase, Bank, Cash) will appear here. (TODO: GET /api/journals)</p>
+
+      <div className="surface">
+        <div className="overflow-x-auto">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Journal Name</th>
+                <th>Journal Type</th>
+                <th>Default Account</th>
+              </tr>
+            </thead>
+            <tbody>
+              {journals.length === 0 ? (
+                <tr>
+                  <td colSpan="3" className="text-center py-6 text-slate-400">
+                    {loading ? 'Loading journals...' : 'No journals found.'}
+                  </td>
+                </tr>
+              ) : (
+                journals.map(j => (
+                  <tr key={j.id}>
+                    <td className="font-semibold text-slate-900">{j.name}</td>
+                    <td>
+                      <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 capitalize">
+                        {j.type}
+                      </span>
+                    </td>
+                    <td className="text-slate-600">
+                      {j.default_account_id ? `Account #${j.default_account_id}` : 'General / Unassigned'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
