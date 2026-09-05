@@ -1,7 +1,8 @@
 {
-  "name": "frontend",
+  "name": "urban-furniture-accounting-frontend",
+  "description": "Urban Furniture Accounting System - Single Page Application built with React, Vite, Tailwind CSS, and Recharts.",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
