@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from app.database import engine, SessionLocal, Base
 from app.models import (
     User, Contact, Product, Account, Journal, AnalyticAccount, Budget, Invoice, Payment,
@@ -243,84 +243,81 @@ def seed_database(force: bool = False):
             JournalEntryLine(journal_entry_id=init_je.id, account_id=account_map["3000"].id, debit=0.0, credit=75000.0, description="Founders Paid-up Share Capital")
         ])
 
-        print("Seeding 30 Purchase Orders, Vendor Bills & Payments...")
+        print("Seeding 75 Purchase Orders, 65 Vendor Bills & 40 Payments...")
         po_objs = []
         bill_objs = []
         vendor_payments = []
         je_counter = 2
 
-        for i in range(30):
+        for i in range(65):
             vend = vendors[i % len(vendors)]
-            prod = product_objs[i % len(product_objs)]
-            qty = 3 + (i % 8) * 2
+            prod = product_objs[(i * 2) % len(product_objs)]
+            qty = 2 + (i % 7) * 2
             unit_p = prod.cost_price
             tot = round(qty * unit_p, 2)
-            days_ago = 70 - (i * 2)
+            days_ago = 88 - (i * 1.2)
 
-            is_billed = i < 22
-            is_paid = i < 15
+            is_paid = i < 40
 
-            inv = None
-            if is_billed:
-                bill_je = JournalEntry(
-                    journal_id=purchase_journal.id,
+            bill_je = JournalEntry(
+                journal_id=purchase_journal.id,
+                entry_number=f"JE-2026-{je_counter:04d}",
+                reference=f"Bill for PO #{i+1:03d} - {vend.name[:18]}",
+                date=now_utc - timedelta(days=days_ago),
+                is_posted=True
+            )
+            db.add(bill_je)
+            db.flush()
+            je_counter += 1
+
+            db.add_all([
+                JournalEntryLine(journal_entry_id=bill_je.id, account_id=account_map["5000"].id, debit=tot, credit=0.0, description=f"Purchase: {prod.name} x {qty}"),
+                JournalEntryLine(journal_entry_id=bill_je.id, account_id=account_map["2000"].id, debit=0.0, credit=tot, description=f"AP: {vend.name}")
+            ])
+
+            inv = Invoice(
+                transaction_type="purchase",
+                contact_id=vend.id,
+                invoice_number=f"BILL-2026-{i+1:04d}",
+                date=now_utc - timedelta(days=days_ago),
+                due_date=now_utc - timedelta(days=days_ago - 30),
+                status="paid" if is_paid else "posted",
+                total_amount=tot,
+                paid_amount=tot if is_paid else 0.0,
+                journal_entry_id=bill_je.id
+            )
+            db.add(inv)
+            db.flush()
+            bill_objs.append(inv)
+
+            if is_paid:
+                pay_je = JournalEntry(
+                    journal_id=bank_journal.id if (i % 2 == 0) else cash_journal.id,
                     entry_number=f"JE-2026-{je_counter:04d}",
-                    reference=f"Bill for PO #{i+1:03d} - {vend.name[:18]}",
-                    date=now_utc - timedelta(days=days_ago),
+                    reference=f"Vendor Settlement BILL-2026-{i+1:04d}",
+                    date=now_utc - timedelta(days=max(1.0, days_ago - 4)),
                     is_posted=True
                 )
-                db.add(bill_je)
+                db.add(pay_je)
                 db.flush()
                 je_counter += 1
 
+                pay_acc = account_map["1020"].id if (i % 2 == 0) else account_map["1010"].id
                 db.add_all([
-                    JournalEntryLine(journal_entry_id=bill_je.id, account_id=account_map["5000"].id, debit=tot, credit=0.0, description=f"Purchase: {prod.name} x {qty}"),
-                    JournalEntryLine(journal_entry_id=bill_je.id, account_id=account_map["2000"].id, debit=0.0, credit=tot, description=f"AP: {vend.name}")
+                    JournalEntryLine(journal_entry_id=pay_je.id, account_id=account_map["2000"].id, debit=tot, credit=0.0, description=f"AP Clearance: {vend.name}"),
+                    JournalEntryLine(journal_entry_id=pay_je.id, account_id=pay_acc, debit=0.0, credit=tot, description="Disbursement to Vendor")
                 ])
 
-                inv = Invoice(
-                    transaction_type="purchase",
-                    contact_id=vend.id,
-                    invoice_number=f"BILL-2026-{i+1:04d}",
-                    date=now_utc - timedelta(days=days_ago),
-                    due_date=now_utc - timedelta(days=days_ago - 30),
-                    status="paid" if is_paid else "posted",
-                    total_amount=tot,
-                    paid_amount=tot if is_paid else 0.0,
-                    journal_entry_id=bill_je.id
+                pmt = Payment(
+                    invoice_id=inv.id,
+                    payment_method="bank" if (i % 2 == 0) else "cash",
+                    amount=tot,
+                    date=now_utc - timedelta(days=max(1.0, days_ago - 4)),
+                    reference=f"VPAY-2026-{i+1:04d}",
+                    journal_entry_id=pay_je.id
                 )
-                db.add(inv)
-                db.flush()
-                bill_objs.append(inv)
-
-                if is_paid:
-                    pay_je = JournalEntry(
-                        journal_id=bank_journal.id if (i % 2 == 0) else cash_journal.id,
-                        entry_number=f"JE-2026-{je_counter:04d}",
-                        reference=f"Vendor Settlement BILL-2026-{i+1:04d}",
-                        date=now_utc - timedelta(days=days_ago - 5),
-                        is_posted=True
-                    )
-                    db.add(pay_je)
-                    db.flush()
-                    je_counter += 1
-
-                    pay_acc = account_map["1020"].id if (i % 2 == 0) else account_map["1010"].id
-                    db.add_all([
-                        JournalEntryLine(journal_entry_id=pay_je.id, account_id=account_map["2000"].id, debit=tot, credit=0.0, description=f"AP Clearance: {vend.name}"),
-                        JournalEntryLine(journal_entry_id=pay_je.id, account_id=pay_acc, debit=0.0, credit=tot, description="Disbursement to Vendor")
-                    ])
-
-                    pmt = Payment(
-                        invoice_id=inv.id,
-                        payment_method="bank" if (i % 2 == 0) else "cash",
-                        amount=tot,
-                        date=now_utc - timedelta(days=days_ago - 5),
-                        reference=f"VPAY-2026-{i+1:04d}",
-                        journal_entry_id=pay_je.id
-                    )
-                    db.add(pmt)
-                    vendor_payments.append(pmt)
+                db.add(pmt)
+                vendor_payments.append(pmt)
 
             po = PurchaseOrder(
                 vendor_id=vend.id,
@@ -328,19 +325,38 @@ def seed_database(force: bool = False):
                 quantity=qty,
                 unit_price=unit_p,
                 total_amount=tot,
-                status="billed" if is_billed else "draft",
+                status="billed",
                 created_at=now_utc - timedelta(days=days_ago + 2),
-                invoice_id=inv.id if inv else None
+                invoice_id=inv.id
             )
             db.add(po)
             po_objs.append(po)
 
-        print("Seeding 35 Sales Orders, Customer Invoices & Receipts...")
+        # 10 additional draft Purchase Orders
+        for i in range(65, 75):
+            vend = vendors[i % len(vendors)]
+            prod = product_objs[(i * 3) % len(product_objs)]
+            qty = 3 + (i % 5)
+            unit_p = prod.cost_price
+            tot = round(qty * unit_p, 2)
+            po = PurchaseOrder(
+                vendor_id=vend.id,
+                product_id=prod.id,
+                quantity=qty,
+                unit_price=unit_p,
+                total_amount=tot,
+                status="draft",
+                created_at=now_utc - timedelta(days=5)
+            )
+            db.add(po)
+            po_objs.append(po)
+
+        print("Seeding 75 Sales Orders, 65 Customer Invoices & 40 Receipts...")
         so_objs = []
         invoice_objs = []
         customer_payments = []
 
-        for i in range(35):
+        for i in range(65):
             cust = customers[i % len(customers)]
             prod = product_objs[(i * 3) % len(product_objs)]
             qty = 1 + (i % 5) * 2
@@ -348,72 +364,69 @@ def seed_database(force: bool = False):
             subtotal = qty * unit_p
             tax = round(subtotal * 0.08, 2)
             tot = round(subtotal + tax, 2)
-            days_ago = 65 - (i * 1.5)
+            days_ago = 85 - (i * 1.2)
 
-            is_invoiced = i < 28
-            is_paid = i < 20
+            is_paid = i < 40
 
-            inv = None
-            if is_invoiced:
-                inv_je = JournalEntry(
-                    journal_id=sales_journal.id,
+            inv_je = JournalEntry(
+                journal_id=sales_journal.id,
+                entry_number=f"JE-2026-{je_counter:04d}",
+                reference=f"Customer Invoice for SO #{i+1:03d} - {cust.name[:18]}",
+                date=now_utc - timedelta(days=days_ago),
+                is_posted=True
+            )
+            db.add(inv_je)
+            db.flush()
+            je_counter += 1
+
+            db.add_all([
+                JournalEntryLine(journal_entry_id=inv_je.id, account_id=account_map["1100"].id, debit=tot, credit=0.0, description=f"AR: {cust.name}"),
+                JournalEntryLine(journal_entry_id=inv_je.id, account_id=account_map["4000"].id, debit=0.0, credit=tot, description=f"Sales: {prod.name} x {qty}")
+            ])
+
+            inv = Invoice(
+                transaction_type="sale",
+                contact_id=cust.id,
+                invoice_number=f"INV-2026-{i+1:04d}",
+                date=now_utc - timedelta(days=days_ago),
+                due_date=now_utc - timedelta(days=days_ago - 20),
+                status="paid" if is_paid else "posted",
+                total_amount=tot,
+                paid_amount=tot if is_paid else 0.0,
+                journal_entry_id=inv_je.id
+            )
+            db.add(inv)
+            db.flush()
+            invoice_objs.append(inv)
+
+            if is_paid:
+                pay_je = JournalEntry(
+                    journal_id=bank_journal.id if (i % 3 != 0) else cash_journal.id,
                     entry_number=f"JE-2026-{je_counter:04d}",
-                    reference=f"Invoice for SO #{i+1:03d} - {cust.name[:18]}",
-                    date=now_utc - timedelta(days=days_ago),
+                    reference=f"Collection INV-2026-{i+1:04d}",
+                    date=now_utc - timedelta(days=max(1.0, days_ago - 3)),
                     is_posted=True
                 )
-                db.add(inv_je)
+                db.add(pay_je)
                 db.flush()
                 je_counter += 1
 
+                recv_acc = account_map["1020"].id if (i % 3 != 0) else account_map["1010"].id
                 db.add_all([
-                    JournalEntryLine(journal_entry_id=inv_je.id, account_id=account_map["1100"].id, debit=tot, credit=0.0, description=f"AR: {cust.name}"),
-                    JournalEntryLine(journal_entry_id=inv_je.id, account_id=account_map["4000"].id, debit=0.0, credit=tot, description=f"Sales: {prod.name} x {qty}")
+                    JournalEntryLine(journal_entry_id=pay_je.id, account_id=recv_acc, debit=tot, credit=0.0, description="Collection from Customer"),
+                    JournalEntryLine(journal_entry_id=pay_je.id, account_id=account_map["1100"].id, debit=0.0, credit=tot, description=f"AR Cleared: {cust.name}")
                 ])
 
-                inv = Invoice(
-                    transaction_type="sale",
-                    contact_id=cust.id,
-                    invoice_number=f"INV-2026-{i+1:04d}",
-                    date=now_utc - timedelta(days=days_ago),
-                    due_date=now_utc - timedelta(days=days_ago - 15),
-                    status="paid" if is_paid else "posted",
-                    total_amount=tot,
-                    paid_amount=tot if is_paid else 0.0,
-                    journal_entry_id=inv_je.id
+                pmt = Payment(
+                    invoice_id=inv.id,
+                    payment_method="bank" if (i % 3 != 0) else "cash",
+                    amount=tot,
+                    date=now_utc - timedelta(days=max(1.0, days_ago - 3)),
+                    reference=f"CPAY-2026-{i+1:04d}",
+                    journal_entry_id=pay_je.id
                 )
-                db.add(inv)
-                db.flush()
-                invoice_objs.append(inv)
-
-                if is_paid:
-                    pay_je = JournalEntry(
-                        journal_id=bank_journal.id if (i % 3 != 0) else cash_journal.id,
-                        entry_number=f"JE-2026-{je_counter:04d}",
-                        reference=f"Collection INV-2026-{i+1:04d}",
-                        date=now_utc - timedelta(days=days_ago - 3),
-                        is_posted=True
-                    )
-                    db.add(pay_je)
-                    db.flush()
-                    je_counter += 1
-
-                    recv_acc = account_map["1020"].id if (i % 3 != 0) else account_map["1010"].id
-                    db.add_all([
-                        JournalEntryLine(journal_entry_id=pay_je.id, account_id=recv_acc, debit=tot, credit=0.0, description="Collection from Customer"),
-                        JournalEntryLine(journal_entry_id=pay_je.id, account_id=account_map["1100"].id, debit=0.0, credit=tot, description=f"AR Cleared: {cust.name}")
-                    ])
-
-                    pmt = Payment(
-                        invoice_id=inv.id,
-                        payment_method="bank" if (i % 3 != 0) else "cash",
-                        amount=tot,
-                        date=now_utc - timedelta(days=days_ago - 3),
-                        reference=f"CPAY-2026-{i+1:04d}",
-                        journal_entry_id=pay_je.id
-                    )
-                    db.add(pmt)
-                    customer_payments.append(pmt)
+                db.add(pmt)
+                customer_payments.append(pmt)
 
             so = SalesOrder(
                 customer_id=cust.id,
@@ -422,24 +435,56 @@ def seed_database(force: bool = False):
                 unit_price=unit_p,
                 tax=tax,
                 total_amount=tot,
-                status="invoiced" if is_invoiced else "draft",
+                status="invoiced",
                 created_at=now_utc - timedelta(days=days_ago + 1),
-                invoice_id=inv.id if inv else None
+                invoice_id=inv.id
             )
             db.add(so)
             so_objs.append(so)
 
-        print("Seeding Recurring Operational & Cost-Center Expense Journal Entries...")
+        # 10 additional draft Sales Orders
+        for i in range(65, 75):
+            cust = customers[i % len(customers)]
+            prod = product_objs[(i * 4) % len(product_objs)]
+            qty = 2 + (i % 4)
+            unit_p = prod.sales_price
+            subtotal = qty * unit_p
+            tax = round(subtotal * 0.08, 2)
+            tot = round(subtotal + tax, 2)
+            so = SalesOrder(
+                customer_id=cust.id,
+                product_id=prod.id,
+                quantity=qty,
+                unit_price=unit_p,
+                tax=tax,
+                total_amount=tot,
+                status="draft",
+                created_at=now_utc - timedelta(days=3)
+            )
+            db.add(so)
+            so_objs.append(so)
+
+        print("Seeding 19 Operating & Cost-Center Expense Journal Entries (Total JEs: 230)...")
         operating_expenses = [
-            {"ref": "Showroom Interior Fitout Milestone", "exp_acc": "1510", "amt": 8500.0, "an": analytics_objs[0], "days": 45},
-            {"ref": "Bengaluru Hub Launch Branding & Signs", "exp_acc": "5400", "amt": 6200.0, "an": analytics_objs[1], "days": 38},
-            {"ref": "Google & Meta Ad Campaigns Jan-Feb", "exp_acc": "5400", "amt": 7500.0, "an": analytics_objs[2], "days": 30},
-            {"ref": "Ergonomic Lumbar Rapid Prototype", "exp_acc": "5000", "amt": 4800.0, "an": analytics_objs[3], "days": 25},
-            {"ref": "Inter-State Freight & Warehouse Rent", "exp_acc": "5500", "amt": 5400.0, "an": analytics_objs[4], "days": 20},
-            {"ref": "CNC Machine Maintenance & Carbide Bits", "exp_acc": "5000", "amt": 3800.0, "an": analytics_objs[5], "days": 18},
-            {"ref": "Showroom & Factory Lease Payment", "exp_acc": "5100", "amt": 9000.0, "an": analytics_objs[0], "days": 15},
-            {"ref": "Monthly Staff Payroll & Incentives", "exp_acc": "5200", "amt": 16500.0, "an": analytics_objs[7], "days": 10},
-            {"ref": "Factory Power & Grid Electric Bill", "exp_acc": "5300", "amt": 3200.0, "an": None, "days": 5}
+            {"ref": "Factory & Showroom Lease Month 1", "exp_acc": "5100", "amt": 8500.0, "an": analytics_objs[0], "days": 75},
+            {"ref": "Staff Salaries & Factory Wages Month 1", "exp_acc": "5200", "amt": 15000.0, "an": analytics_objs[7], "days": 70},
+            {"ref": "Factory Electricity & Utility Grid Month 1", "exp_acc": "5300", "amt": 2800.0, "an": None, "days": 68},
+            {"ref": "Google Ads & Social Media Marketing Month 1", "exp_acc": "5400", "amt": 4500.0, "an": analytics_objs[2], "days": 65},
+            {"ref": "Showroom Interior Architectural Milestone 1", "exp_acc": "1510", "amt": 7200.0, "an": analytics_objs[0], "days": 60},
+            {"ref": "Factory & Showroom Lease Month 2", "exp_acc": "5100", "amt": 8500.0, "an": analytics_objs[0], "days": 50},
+            {"ref": "Staff Salaries & Factory Wages Month 2", "exp_acc": "5200", "amt": 15200.0, "an": analytics_objs[7], "days": 45},
+            {"ref": "Factory Electricity & Utility Grid Month 2", "exp_acc": "5300", "amt": 2950.0, "an": None, "days": 43},
+            {"ref": "Bengaluru Hub Launch Retail Branding", "exp_acc": "5400", "amt": 6000.0, "an": analytics_objs[1], "days": 40},
+            {"ref": "Commercial Freight & Inter-State Shipping", "exp_acc": "5500", "amt": 3800.0, "an": analytics_objs[4], "days": 35},
+            {"ref": "CNC Router Tooling & Carbide Bits", "exp_acc": "5000", "amt": 4200.0, "an": analytics_objs[5], "days": 30},
+            {"ref": "Showroom Interior Fitout Milestone 2", "exp_acc": "1510", "amt": 5800.0, "an": analytics_objs[0], "days": 25},
+            {"ref": "Factory & Showroom Lease Month 3", "exp_acc": "5100", "amt": 8500.0, "an": analytics_objs[0], "days": 20},
+            {"ref": "Staff Salaries & Factory Wages Month 3", "exp_acc": "5200", "amt": 15500.0, "an": analytics_objs[7], "days": 18},
+            {"ref": "Factory Electricity & Utility Grid Month 3", "exp_acc": "5300", "amt": 3100.0, "an": None, "days": 15},
+            {"ref": "Ergonomic Lumbar Stress Analysis Testing", "exp_acc": "5000", "amt": 3600.0, "an": analytics_objs[3], "days": 12},
+            {"ref": "Warranty Claims & Spare Part Servicing", "exp_acc": "5000", "amt": 2400.0, "an": analytics_objs[6], "days": 8},
+            {"ref": "Fleet Route Fuel & Dispatch Optimization", "exp_acc": "5500", "amt": 4100.0, "an": analytics_objs[4], "days": 5},
+            {"ref": "Digital Ads Performance Campaign Retargeting", "exp_acc": "5400", "amt": 5200.0, "an": analytics_objs[2], "days": 2}
         ]
 
         for opex in operating_expenses:
