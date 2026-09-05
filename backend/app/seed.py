@@ -146,18 +146,6 @@ def seed_database(force: bool = False):
             db.flush()
             journal_map[jd["type"]] = j
 
-<<<<<<< HEAD
-        print("Seeding Users...")
-        users = [
-            User(email="admin@urbanfurniture.com", hashed_password=hash_password("admin123"), full_name="Aakash Jayani (Owner)", role="admin"),
-            User(email="accountant@urbanfurniture.com", hashed_password=hash_password("accountant123"), full_name="Chandan Shah (Chief Accountant)", role="invoicing_user"),
-            User(email="clerk@urbanfurniture.com", hashed_password=hash_password("clerk123"), full_name="Rudra Patel (Ledger Officer)", role="invoicing_user"),
-            User(email="customer@tejas.com", hashed_password=hash_password("customer123"), full_name="Tejas Sharma (Client Portal)", role="contact"),
-            User(email="vendor@woodcraft.com", hashed_password=hash_password("vendor123"), full_name="Vikram Mehta (Timber Supplier)", role="contact")
-        ]
-        db.add_all(users)
-        db.flush()
-
         print("Seeding Contacts (35 Customers & Vendors)...")
         contact_objs = []
         for c_data in CUSTOMERS_DATA:
@@ -173,65 +161,23 @@ def seed_database(force: bool = False):
         customers = [c for c in contact_objs if c.type == "customer"]
         vendors = [c for c in contact_objs if c.type == "vendor"]
 
+        print("Seeding Users...")
+        users = [
+            User(email="admin@urbanfurniture.com", hashed_password=hash_password("admin123"), full_name="Aakash Jayani (Owner)", role="admin"),
+            User(email="accountant@urbanfurniture.com", hashed_password=hash_password("accountant123"), full_name="Chandan Shah (Chief Accountant)", role="invoicing_user"),
+            User(email="clerk@urbanfurniture.com", hashed_password=hash_password("clerk123"), full_name="Rudra Patel (Ledger Officer)", role="invoicing_user"),
+            User(email="customer@tejas.com", hashed_password=hash_password("customer123"), full_name="Tejas Sharma (Client Portal)", role="contact", contact_id=customers[0].id if customers else None),
+            User(email="vendor@woodcraft.com", hashed_password=hash_password("vendor123"), full_name="Vikram Mehta (Timber Supplier)", role="contact", contact_id=vendors[0].id if vendors else None)
+        ]
+        db.add_all(users)
+        db.flush()
+
         print("Seeding Products (30 Items, Services, and Bundles)...")
         product_objs = []
         for p_data in PRODUCTS_DATA:
             p = Product(**p_data)
             db.add(p)
             product_objs.append(p)
-=======
-        print("Seeding Contacts...")
-        customer = Contact(
-            name="Tejas Office Solutions",
-            type="customer",
-            email="customer@tejas.com",
-            mobile="+91 9876543210",
-            address="101 Business Hub, Mumbai",
-            city="Mumbai",
-            state="Maharashtra",
-            pincode="400001"
-        )
-        vendor = Contact(
-            name="WoodCraft Timber Supplies",
-            type="vendor",
-            email="sales@woodcraft.com",
-            mobile="+91 9123456789",
-            address="45 Industrial Estate, Pune",
-            city="Pune",
-            state="Maharashtra",
-            pincode="411001"
-        )
-        db.add_all([customer, vendor])
-        db.flush()
-
-        print("Seeding Users...")
-        admin = User(
-            email="admin@urbanfurniture.com",
-            hashed_password=hash_password("admin123"),
-            full_name="System Admin",
-            role="admin"
-        )
-        accountant = User(
-            email="accountant@urbanfurniture.com",
-            hashed_password=hash_password("accountant123"),
-            full_name="Lead Accountant",
-            role="invoicing_user"
-        )
-        contact_user = User(
-            email="customer@tejas.com",
-            hashed_password=hash_password("customer123"),
-            full_name="Tejas Client",
-            role="contact",
-            contact_id=customer.id
-        )
-        db.add_all([admin, accountant, contact_user])
-        db.flush()
-
-        print("Seeding Products...")
-        p1 = Product(name="Ergonomic Executive Desk", type="goods", sales_price=1200.0, cost_price=700.0, category="Desks")
-        p2 = Product(name="Mesh Chair", type="goods", sales_price=350.0, cost_price=180.0, category="Chairs")
-        db.add_all([p1, p2])
->>>>>>> f769697 (Update accounting system)
         db.flush()
 
         print("Seeding Analytic Accounts (Cost Centers)...")

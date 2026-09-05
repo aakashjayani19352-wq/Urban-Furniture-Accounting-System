@@ -199,7 +199,7 @@ def test_sales_order_to_invoice_and_payment_flow():
     assert res_pay.json()["invoice_status"] == "paid"
 
 def test_contact_role_restrictions_and_payment_flow():
-    db = SessionLocal()
+    db = TestingSessionLocal()
     # Create contact user matching existing customer (cust@test.com)
     contact_user = User(
         email="cust@test.com",
@@ -280,7 +280,7 @@ def test_contact_role_restrictions_and_payment_flow():
     db.close()
 
 def test_accountant_vs_admin_master_data_permissions():
-    db = SessionLocal()
+    db = TestingSessionLocal()
     # Create accountant user
     acc_user = User(
         email="acc@test.com",

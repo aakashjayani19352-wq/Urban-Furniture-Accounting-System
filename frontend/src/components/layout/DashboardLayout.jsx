@@ -24,28 +24,11 @@ export default function DashboardLayout() {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-<<<<<<< HEAD
-          <NavLink end to="/" className={navLink}><span>⌂</span>Dashboard</NavLink>
-          <NavLink to="/live-demo" className={navLink}><span className="text-emerald-500 font-bold">▶</span>Live Process Demo</NavLink>
-          <div className="px-3 pb-2 pt-5 text-[11px] font-bold uppercase tracking-widest text-slate-400">Master data</div>
-          <NavLink to="/contacts" className={navLink}><span>♧</span>Contacts</NavLink>
-          <NavLink to="/products" className={navLink}><span>□</span>Products</NavLink>
-          <NavLink to="/accounts" className={navLink}><span>▤</span>Chart of Accounts</NavLink>
-          <NavLink to="/journals" className={navLink}><span>▧</span>Journals</NavLink>
-          
-          <div className="px-3 pb-2 pt-5 text-[11px] font-bold uppercase tracking-widest text-slate-400">Transactions</div>
-          <NavLink to="/purchases" className={navLink}><span>↓</span>Purchase Orders</NavLink>
-          <NavLink to="/sales" className={navLink}><span>↑</span>Sales Orders</NavLink>
-          <NavLink to="/journal-entries" className={navLink}><span>≡</span>Journal Entries</NavLink>
-          
-          <div className="px-3 pb-2 pt-5 text-[11px] font-bold uppercase tracking-widest text-slate-400">Reports</div>
-          <NavLink to="/budgets" className={navLink}><span>◫</span>Budgets</NavLink>
-          <NavLink to="/reports/balance-sheet" className={navLink}><span>▥</span>Balance Sheet</NavLink>
-          <NavLink to="/reports/profit-loss" className={navLink}><span>⌁</span>Profit & Loss</NavLink>
-          <NavLink to="/reports" className={navLink}><span>▦</span>Budget Report</NavLink>
-=======
           <NavLink end to="/" className={navLink}>
             <span className="text-base">⌂</span> Dashboard Overview
+          </NavLink>
+          <NavLink to="/live-demo" className={navLink}>
+            <span className="text-base text-emerald-500 font-bold">▶</span> Live Process Demo
           </NavLink>
 
           <div className="px-3 pb-2 pt-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-amber-400/70">
@@ -92,15 +75,11 @@ export default function DashboardLayout() {
           <NavLink to="/reports" className={navLink}>
             <span className="text-base">▦</span> Budget Variance Report
           </NavLink>
->>>>>>> f769697 (Update accounting system)
         </nav>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex min-w-0 flex-1 flex-col">
-<<<<<<< HEAD
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-8"><div className="font-semibold text-slate-800 lg:hidden">Urban Furniture</div><div className="hidden text-sm text-slate-500 lg:block">Manage your business with confidence.</div><div className="flex items-center gap-3"><NavLink to="/live-demo" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs shadow hover:bg-emerald-700 transition">▶ Live Workflow</NavLink><span className="hidden rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 sm:inline">{user?.role}</span><button onClick={logout} className="text-sm font-semibold text-slate-500 transition hover:text-red-600">Sign out</button></div>
-=======
         <header className="flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-5 backdrop-blur-lg sm:px-8 dark:border-amber-500/15 dark:bg-slate-900/80">
           <div className="flex items-center gap-3 lg:hidden">
             <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-400 text-sm font-extrabold text-slate-950">
@@ -114,6 +93,13 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
+            <NavLink
+              to="/live-demo"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs shadow hover:bg-emerald-700 transition"
+            >
+              ▶ Live Workflow
+            </NavLink>
+
             <button
               onClick={toggleTheme}
               className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition dark:border-amber-500/20 dark:bg-slate-800/80 dark:text-amber-200 dark:hover:bg-slate-700/80"
@@ -133,7 +119,6 @@ export default function DashboardLayout() {
               Sign out
             </button>
           </div>
->>>>>>> f769697 (Update accounting system)
         </header>
 
         <div className="flex-1 overflow-auto p-5 sm:p-8">
