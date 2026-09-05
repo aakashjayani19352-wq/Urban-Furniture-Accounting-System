@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -61,7 +61,8 @@ def balance_sheet(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
-    as_of = datetime.fromisoformat(as_of_date) if as_of_date else datetime.utcnow()
+    as_of = datetime.fromisoformat(as_of_date) if as_of_date else datetime.now(timezone.utc)
+
 
     results = db.query(
         Account.code, Account.name, Account.type,

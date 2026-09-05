@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ def create_balanced_entry(db: Session, journal_id: int, lines: list, reference: 
         )
 
     count = db.query(JournalEntry).count() + 1
-    entry_num = f"JE-{datetime.utcnow().strftime('%Y%m%d')}-{count:04d}"
+    entry_num = f"JE-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
 
     entry = JournalEntry(
         journal_id=journal_id,
@@ -127,7 +127,7 @@ def record_sale(
 
     is_paid = data.payment_method in ["cash", "bank"]
     count = db.query(Invoice).count() + 1
-    inv_num = f"INV-{datetime.utcnow().strftime('%Y%m%d')}-{count:04d}"
+    inv_num = f"INV-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
 
     try:
         entry = create_balanced_entry(db, journal.id, lines, f"Sale #{product.name}")
@@ -186,7 +186,7 @@ def record_purchase(
 
     is_paid = data.payment_method in ["cash", "bank"]
     count = db.query(Invoice).count() + 1
-    bill_num = f"BILL-{datetime.utcnow().strftime('%Y%m%d')}-{count:04d}"
+    bill_num = f"BILL-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
 
     try:
         entry = create_balanced_entry(db, journal.id, lines, f"Purchase #{product.name}")

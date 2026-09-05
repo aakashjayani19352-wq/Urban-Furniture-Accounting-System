@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.database import engine, SessionLocal, Base
 from app.models import (
     User, Contact, Product, Account, Journal, AnalyticAccount, Budget, Invoice, Payment, JournalEntry, JournalEntryLine
@@ -111,16 +111,18 @@ def seed_database():
         db.add(analytic1)
         db.flush()
 
+        now_utc = datetime.now(timezone.utc)
         budget1 = Budget(
             name="Showroom Fitout Budget",
-            start_date=datetime.utcnow() - timedelta(days=30),
-            end_date=datetime.utcnow() + timedelta(days=60),
+            start_date=now_utc - timedelta(days=30),
+            end_date=now_utc + timedelta(days=60),
             responsible_person="System Admin",
             analytic_account_id=analytic1.id,
             planned_amount=10000.0
         )
         db.add(budget1)
         db.flush()
+
 
         print("Seeding Initial Capital Entry ($50,000)...")
         cap_entry = JournalEntry(journal_id=gen_journal.id, entry_number="JE-INIT-001", reference="Initial Capital Deposit", is_posted=True)

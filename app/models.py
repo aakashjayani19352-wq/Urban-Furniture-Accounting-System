@@ -1,7 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class User(Base):
     __tablename__ = "users"
@@ -10,16 +13,16 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
-    role = Column(String, default="invoicing_user", nullable=False) # admin, invoicing_user, contact
+    role = Column(String, default="invoicing_user", nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class Contact(Base):
     __tablename__ = "contacts"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False) # customer, vendor, both
+    type = Column(String, nullable=False)
     email = Column(String, nullable=True)
     mobile = Column(String, nullable=True)
     address = Column(Text, nullable=True)
@@ -27,7 +30,7 @@ class Contact(Base):
     state = Column(String, nullable=True)
     pincode = Column(String, nullable=True)
     profile_image = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     invoices = relationship("Invoice", back_populates="contact")
 
@@ -36,11 +39,11 @@ class Product(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False) # goods, service, combo
+    type = Column(String, nullable=False)
     sales_price = Column(Float, nullable=False, default=0.0)
     cost_price = Column(Float, nullable=False, default=0.0)
     category = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
 class Account(Base):
     __tablename__ = "accounts"
@@ -48,9 +51,9 @@ class Account(Base):
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False) # asset, liability, expense, income, capital
+    type = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     journal_lines = relationship("JournalEntryLine", back_populates="account")
 
@@ -59,7 +62,7 @@ class Journal(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False) # sales, purchase, bank, cash, general
+    type = Column(String, nullable=False)
     default_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
 
     default_account = relationship("Account")
@@ -71,10 +74,10 @@ class JournalEntry(Base):
     id = Column(Integer, primary_key=True, index=True)
     journal_id = Column(Integer, ForeignKey("journals.id"), nullable=False)
     entry_number = Column(String, unique=True, index=True, nullable=False)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date = Column(DateTime, default=utc_now, nullable=False)
     reference = Column(String, nullable=True)
     is_posted = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     journal = relationship("Journal", back_populates="entries")
     lines = relationship("JournalEntryLine", back_populates="journal_entry", cascade="all, delete-orphan")
@@ -99,8 +102,8 @@ class AnalyticAccount(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False) # income, expenses
-    created_at = Column(DateTime, default=datetime.utcnow)
+    type = Column(String, nullable=False)
+    created_at = Column(DateTime, default=utc_now)
 
     journal_lines = relationship("JournalEntryLine", back_populates="analytic_account")
     budgets = relationship("Budget", back_populates="analytic_account")
@@ -115,7 +118,7 @@ class Budget(Base):
     responsible_person = Column(String, nullable=True)
     analytic_account_id = Column(Integer, ForeignKey("analytic_accounts.id"), nullable=False)
     planned_amount = Column(Float, nullable=False, default=0.0)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=utc_now)
 
     analytic_account = relationship("AnalyticAccount", back_populates="budgets")
 
@@ -123,12 +126,12 @@ class Invoice(Base):
     __tablename__ = "invoices"
 
     id = Column(Integer, primary_key=True, index=True)
-    transaction_type = Column(String, nullable=False) # sale, purchase
+    transaction_type = Column(String, nullable=False)
     contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False)
     invoice_number = Column(String, unique=True, index=True, nullable=False)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date = Column(DateTime, default=utc_now, nullable=False)
     due_date = Column(DateTime, nullable=True)
-    status = Column(String, default="unpaid") # unpaid, partial, paid
+    status = Column(String, default="unpaid")
     total_amount = Column(Float, nullable=False, default=0.0)
     paid_amount = Column(Float, nullable=False, default=0.0)
     journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
@@ -142,11 +145,12 @@ class Payment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
-    payment_method = Column(String, nullable=False) # cash, bank
+    payment_method = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date = Column(DateTime, default=utc_now, nullable=False)
     reference = Column(String, nullable=True)
     journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
 
     invoice = relationship("Invoice", back_populates="payments")
     journal_entry = relationship("JournalEntry")
+
