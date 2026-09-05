@@ -13,18 +13,17 @@ export default function ProductForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Add Product</h2>
+    <div className="form-surface"><h2 className="text-xl font-semibold text-slate-900 mb-1">Add product</h2><p className="mb-6 text-sm text-slate-500">Add an item to your catalogue.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block">Product Name *</label>
-          <input required className="border p-2 w-full" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          <input required className="w-full px-3 py-2.5" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
         </div>
         <div>
           <label className="block">Price *</label>
-          <input type="number" required className="border p-2 w-full" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
+          <input type="number" required className="w-full px-3 py-2.5" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} />
         </div>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+        <div className="flex justify-end pt-2"><button type="submit" className="primary-button">Save product</button></div>
       </form>
     </div>
   );

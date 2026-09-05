@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body { @apply bg-slate-50 text-slate-800 antialiased; }
+  button, input, select { font: inherit; }
+  input, select { @apply rounded-lg border-slate-200 bg-white text-slate-800 shadow-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100; }
+  label { @apply mb-1.5 text-sm font-medium text-slate-700; }
+}
+
+@layer components {
+  .page-heading { @apply text-2xl font-semibold tracking-tight text-slate-900; }
+  .page-subtitle { @apply mt-1 text-sm text-slate-500; }
+  .surface { @apply overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm; }
+  .form-surface { @apply mx-auto max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8; }
+  .primary-button { @apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2; }
+  .secondary-button { @apply inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50; }
+  .data-table { @apply min-w-full divide-y divide-slate-200; }
+  .data-table thead { @apply bg-slate-50; }
+  .data-table th { @apply px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500; }
+  .data-table td { @apply px-6 py-4 text-sm; }
+  .data-table tbody { @apply divide-y divide-slate-100 bg-white; }
+  .data-table tbody tr { @apply transition hover:bg-blue-50/40; }
+  .nav-link { @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900; }
+  .nav-link.active { @apply bg-blue-50 text-blue-700; }
+}

@@ -18,31 +18,31 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow relative">
+    <div className="form-surface relative">
       {showSuccess && (
         <div className="absolute top-0 left-0 w-full bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-t mb-4">
           ✅ Contact saved successfully! Redirecting...
         </div>
       )}
-      <h2 className="text-xl font-bold mb-4 mt-2">Add Contact</h2>
+      <h2 className="text-xl font-semibold text-slate-900 mb-1 mt-2">Add contact</h2><p className="mb-6 text-sm text-slate-500">Create a customer or vendor record.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block">Name *</label>
-          <input required className="border p-2 w-full" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+          <input required className="w-full px-3 py-2.5" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
         </div>
         <div>
           <label className="block">Email *</label>
-          <input type="email" required className="border p-2 w-full" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+          <input type="email" required className="w-full px-3 py-2.5" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
         </div>
         <div>
           <label className="block">Type</label>
-          <select className="border p-2 w-full" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+          <select className="w-full px-3 py-2.5" value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
             <option>Customer</option>
             <option>Vendor</option>
             <option>Both</option>
           </select>
         </div>
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+        <div className="flex justify-end pt-2"><button type="submit" className="primary-button">Save contact</button></div>
       </form>
     </div>
   );

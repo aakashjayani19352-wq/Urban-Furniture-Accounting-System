@@ -33,15 +33,15 @@ export default function ProfitLoss() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Total Income</h3>
-          <p className="text-3xl font-bold text-green-600 mt-2">\${totalIncome.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-green-600 mt-2">${totalIncome.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Total Expenses</h3>
-          <p className="text-3xl font-bold text-red-600 mt-2">\${totalExpenses.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-red-600 mt-2">${totalExpenses.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Net Profit</h3>
-          <p className="text-3xl font-bold text-blue-600 mt-2">\${netProfit.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-blue-600 mt-2">${netProfit.toLocaleString()}</p>
         </div>
       </div>
 
@@ -52,10 +52,10 @@ export default function ProfitLoss() {
           <PieChart width={400} height={300}>
             <Pie data={expenseData} cx={200} cy={150} innerRadius={60} outerRadius={100} fill="#8884d8" paddingAngle={5} dataKey="value">
               {expenseData.map((entry, index) => (
-                <Cell key={\`cell-\${index}\`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => \`$\${value}\`} />
+            <Tooltip formatter={(value) => `$${value}`} />
             <Legend />
           </PieChart>
         </div>
@@ -67,7 +67,7 @@ export default function ProfitLoss() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
             <YAxis />
-            <Tooltip formatter={(value) => \`$\${value}\`} />
+            <Tooltip formatter={(value) => `$${value}`} />
             <Legend />
             <Bar dataKey="Income" fill="#00C49F" />
             <Bar dataKey="Expenses" fill="#FF8042" />

@@ -33,15 +33,15 @@ export default function BalanceSheet() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Total Assets</h3>
-          <p className="text-3xl font-bold text-blue-600 mt-2">\${totalAssets.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-blue-600 mt-2">${totalAssets.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Total Liabilities</h3>
-          <p className="text-3xl font-bold text-red-600 mt-2">\${totalLiabilities.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-red-600 mt-2">${totalLiabilities.toLocaleString()}</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
           <h3 className="text-gray-500 text-sm font-medium uppercase">Total Equity</h3>
-          <p className="text-3xl font-bold text-purple-600 mt-2">\${totalEquity.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-purple-600 mt-2">${totalEquity.toLocaleString()}</p>
         </div>
       </div>
 
@@ -52,10 +52,10 @@ export default function BalanceSheet() {
           <PieChart width={400} height={300}>
             <Pie data={assetData} cx={200} cy={150} outerRadius={100} fill="#8884d8" dataKey="value" label>
               {assetData.map((entry, index) => (
-                <Cell key={\`cell-\${index}\`} fill={COLORS_ASSETS[index % COLORS_ASSETS.length]} />
+                <Cell key={`cell-${index}`} fill={COLORS_ASSETS[index % COLORS_ASSETS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => \`$\${value}\`} />
+            <Tooltip formatter={(value) => `$${value}`} />
             <Legend />
           </PieChart>
         </div>
@@ -66,10 +66,10 @@ export default function BalanceSheet() {
           <PieChart width={400} height={300}>
             <Pie data={liabilityData} cx={200} cy={150} innerRadius={50} outerRadius={100} fill="#82ca9d" dataKey="value">
               {liabilityData.map((entry, index) => (
-                <Cell key={\`cell-\${index}\`} fill={COLORS_LIAB[index % COLORS_LIAB.length]} />
+                <Cell key={`cell-${index}`} fill={COLORS_LIAB[index % COLORS_LIAB.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => \`$\${value}\`} />
+            <Tooltip formatter={(value) => `$${value}`} />
             <Legend />
           </PieChart>
         </div>
