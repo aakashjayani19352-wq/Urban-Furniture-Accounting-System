@@ -11,6 +11,7 @@ export default function DashboardLayout() {
         <div className="border-b border-slate-100 px-6 py-5"><div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-blue-600 text-lg font-bold text-white">U</div><div><div className="font-semibold text-slate-900">Urban Furniture</div><div className="text-xs text-slate-500">Accounting</div></div></div></div>
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           <NavLink end to="/" className={navLink}><span>⌂</span>Dashboard</NavLink>
+          <NavLink to="/live-demo" className={navLink}><span className="text-emerald-500 font-bold">▶</span>Live Process Demo</NavLink>
           <div className="px-3 pb-2 pt-5 text-[11px] font-bold uppercase tracking-widest text-slate-400">Master data</div>
           <NavLink to="/contacts" className={navLink}><span>♧</span>Contacts</NavLink>
           <NavLink to="/products" className={navLink}><span>□</span>Products</NavLink>
@@ -30,7 +31,7 @@ export default function DashboardLayout() {
         </nav>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-8"><div className="font-semibold text-slate-800 lg:hidden">Urban Furniture</div><div className="hidden text-sm text-slate-500 lg:block">Manage your business with confidence.</div><div className="flex items-center gap-3"><span className="hidden rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 sm:inline">{user?.role}</span><button onClick={logout} className="text-sm font-semibold text-slate-500 transition hover:text-red-600">Sign out</button></div>
+        <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-8"><div className="font-semibold text-slate-800 lg:hidden">Urban Furniture</div><div className="hidden text-sm text-slate-500 lg:block">Manage your business with confidence.</div><div className="flex items-center gap-3"><NavLink to="/live-demo" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs shadow hover:bg-emerald-700 transition">▶ Live Workflow</NavLink><span className="hidden rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 sm:inline">{user?.role}</span><button onClick={logout} className="text-sm font-semibold text-slate-500 transition hover:text-red-600">Sign out</button></div>
         </header>
         <div className="flex-1 overflow-auto p-5 sm:p-8">
           <Outlet />

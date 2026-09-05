@@ -20,6 +20,7 @@ import BudgetList from './features/budgets/BudgetList';
 import BalanceSheet from './features/reports/BalanceSheet';
 import ProfitLoss from './features/reports/ProfitLoss';
 import DashboardHome from './features/dashboard/DashboardHome';
+import LiveDemoPlayback from './features/demo/LiveDemoPlayback';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -32,8 +33,10 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/demo" element={<div className="min-h-screen bg-slate-100 p-4 md:p-8"><LiveDemoPlayback /></div>} />
           <Route path="/" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
             <Route index element={<DashboardHome />} />
+            <Route path="live-demo" element={<LiveDemoPlayback />} />
             <Route path="contacts" element={<ContactList />} />
             <Route path="contacts/new" element={<ContactForm />} />
             <Route path="products" element={<ProductList />} />
