@@ -1,21 +1,15 @@
 from datetime import datetime, timedelta
 from app.database import engine, SessionLocal, Base
 from app.models import (
-    User, Contact, Product, Account, Journal, AnalyticAccount, Budget, Invoice
+    User, Contact, Product, Account, Journal, AnalyticAccount, Budget, Invoice, Payment, JournalEntry, JournalEntryLine
 )
 from app.auth import hash_password
-from app.services.accounting import (
-    create_sale_transaction, create_purchase_transaction, process_payment,
-    validate_and_create_journal_entry
-)
-from app.schemas import SaleTransactionCreate, PurchaseTransactionCreate, PaymentCreate
 
 def seed_database():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:
-        # Check if already seeded
         if db.query(User).filter(User.email == "admin@urbanfurniture.com").first():
             print("Database already contains seed data.")
             return
@@ -50,13 +44,15 @@ def seed_database():
             {"name": "Cash Journal", "type": "cash", "default_account_id": account_map["1010"].id},
             {"name": "General Journal", "type": "general", "default_account_id": None}
         ]
-        general_journal = None
+        gen_journal = None
         for j_data in journals_data:
-            j = Journal(**j_data)
-            db.add(j)
-            db.flush()
+            j = db.query(Journal).filter(Journal.type == j_data["type"]).first()
+            if not j:
+                j = Journal(**j_data)
+                db.add(j)
+                db.flush()
             if j.type == "general":
-                general_journal = j
+                gen_journal = j
 
         print("Seeding Users...")
         admin = User(
@@ -74,7 +70,7 @@ def seed_database():
         contact_user = User(
             email="customer@tejas.com",
             hashed_password=hash_password("customer123"),
-            full_name="Tejas Office Client",
+            full_name="Tejas Client",
             role="contact"
         )
         db.add_all([admin, accountant, contact_user])
@@ -107,14 +103,12 @@ def seed_database():
         print("Seeding Products...")
         p1 = Product(name="Ergonomic Executive Desk", type="goods", sales_price=1200.0, cost_price=700.0, category="Desks")
         p2 = Product(name="Mesh Chair", type="goods", sales_price=350.0, cost_price=180.0, category="Chairs")
-        p3 = Product(name="Assembly & Setup Service", type="service", sales_price=150.0, cost_price=50.0, category="Services")
-        db.add_all([p1, p2, p3])
+        db.add_all([p1, p2])
         db.flush()
 
         print("Seeding Analytic Accounts & Budgets...")
         analytic1 = AnalyticAccount(name="Showroom Expansion", type="expenses")
-        analytic2 = AnalyticAccount(name="Q3 Online Sales Drive", type="income")
-        db.add_all([analytic1, analytic2])
+        db.add(analytic1)
         db.flush()
 
         budget1 = Budget(
@@ -129,44 +123,15 @@ def seed_database():
         db.flush()
 
         print("Seeding Initial Capital Entry ($50,000)...")
-        initial_lines = [
-            {"account_id": account_map["1020"].id, "debit": 50000.0, "credit": 0.0, "description": "Initial Capital Deposit"},
-            {"account_id": account_map["3000"].id, "debit": 0.0, "credit": 50000.0, "description": "Share Capital Credit"}
-        ]
-        validate_and_create_journal_entry(db, journal_id=general_journal.id, lines_data=initial_lines, reference="Initial Capital")
+        cap_entry = JournalEntry(journal_id=gen_journal.id, entry_number="JE-INIT-001", reference="Initial Capital Deposit", is_posted=True)
+        db.add(cap_entry)
+        db.flush()
+
+        db.add_all([
+            JournalEntryLine(journal_entry_id=cap_entry.id, account_id=account_map["1020"].id, debit=50000.0, credit=0.0, description="Initial Cash Deposit"),
+            JournalEntryLine(journal_entry_id=cap_entry.id, account_id=account_map["3000"].id, debit=0.0, credit=50000.0, description="Capital Credit")
+        ])
         db.commit()
-
-        print("Seeding Initial Sample Transactions...")
-        # 1. Purchase stock from vendor
-        purchase_data = PurchaseTransactionCreate(
-            vendor_id=vendor.id,
-            product_id=p1.id,
-            quantity=5,
-            unit_price=700.0,
-            payment_method="bank",
-            analytic_account_id=analytic1.id
-        )
-        create_purchase_transaction(db, purchase_data)
-
-        # 2. Sale to customer
-        sale_data = SaleTransactionCreate(
-            customer_id=customer.id,
-            product_id=p1.id,
-            quantity=2,
-            unit_price=1200.0,
-            tax=100.0,
-            payment_method=None # unpaid invoice
-        )
-        inv = create_sale_transaction(db, sale_data)
-
-        # 3. Partial payment received
-        payment_data = PaymentCreate(
-            invoice_id=inv.id,
-            payment_method="bank",
-            amount=1500.0,
-            reference="NEFT Payment 9871"
-        )
-        process_payment(db, payment_data)
 
         print("Successfully seeded demo data!")
 
