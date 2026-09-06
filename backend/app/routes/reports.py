@@ -114,20 +114,28 @@ def budget_report(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
-    budgets = db.query(Budget).all()
+    from sqlalchemy.orm import joinedload
+
+    budgets = db.query(Budget).options(joinedload(Budget.analytic_account)).all()
+
+    # Batch query: sum debit/credit grouped by analytic_account_id
+    agg_rows = db.query(
+        JournalEntryLine.analytic_account_id,
+        func.sum(JournalEntryLine.debit).label("deb"),
+        func.sum(JournalEntryLine.credit).label("cred")
+    ).filter(
+        JournalEntryLine.analytic_account_id.isnot(None)
+    ).group_by(JournalEntryLine.analytic_account_id).all()
+
+    agg_map = {row.analytic_account_id: (row.deb or 0.0, row.cred or 0.0) for row in agg_rows}
+
     items = []
     for b in budgets:
-        analytic = db.query(AnalyticAccount).filter(AnalyticAccount.id == b.analytic_account_id).first()
+        analytic = b.analytic_account
         a_name = analytic.name if analytic else "General"
         a_type = analytic.type if analytic else "expenses"
 
-        sum_line = db.query(
-            func.sum(JournalEntryLine.debit).label("deb"),
-            func.sum(JournalEntryLine.credit).label("cred")
-        ).filter(JournalEntryLine.analytic_account_id == b.analytic_account_id).first()
-
-        deb = sum_line.deb or 0.0
-        cred = sum_line.cred or 0.0
+        deb, cred = agg_map.get(b.analytic_account_id, (0.0, 0.0))
         actual = (deb - cred) if a_type == "expenses" else (cred - deb)
         actual = round(actual, 2)
 
@@ -142,3 +150,4 @@ def budget_report(
             "achievement_percentage": round((actual / b.planned_amount * 100), 1) if b.planned_amount > 0 else 0.0
         })
     return {"items": items}
+

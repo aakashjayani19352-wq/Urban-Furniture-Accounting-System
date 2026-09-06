@@ -1,8 +1,15 @@
-from fastapi import FastAPI
+import logging
+import time
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.database import engine, Base
 from app.routes import auth_routes, contacts, products, transactions, reports, budgets
 from app.seed import seed_database
+
+# Configure request logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("urban_accounting")
 
 # Auto-create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -30,13 +37,31 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
+        "http://localhost:8001",
+        "http://127.0.0.1:8001",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# D4: Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration_ms = round((time.time() - start) * 1000, 1)
+    logger.info(f"{request.method} {request.url.path} → {response.status_code} ({duration_ms}ms)")
+    return response
+
+# D3: Global exception handler — never return raw stack traces
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error. Please contact support if this persists."}
+    )
 
 # Include API Routers
 app.include_router(auth_routes.router)
@@ -65,3 +90,4 @@ def root():
             "reports": "/api/reports"
         }
     }
+

@@ -47,7 +47,7 @@ export default function ContactPortal() {
         amount: parseFloat(payAmount) || (payModalItem.total_amount - payModalItem.paid_amount),
         reference: `Portal Payment for ${payModalItem.invoice_number}`
       });
-      setActionSuccess(`Payment of $${payAmount} submitted successfully for ${payModalItem.invoice_number}!`);
+      setActionSuccess(`Payment of ₹${payAmount} submitted successfully for ${payModalItem.invoice_number}!`);
       setPayModalItem(null);
       fetchContactData();
       setTimeout(() => setActionSuccess(null), 4000);
@@ -172,9 +172,9 @@ export default function ContactPortal() {
                         <td className="text-slate-600 dark:text-slate-400">
                           {item.date ? new Date(item.date).toLocaleDateString() : 'N/A'}
                         </td>
-                        <td className="font-semibold text-slate-900 dark:text-slate-100">${Number(item.total_amount).toFixed(2)}</td>
-                        <td className="text-slate-600 dark:text-slate-400">${Number(item.paid_amount || 0).toFixed(2)}</td>
-                        <td className="font-bold text-slate-900 dark:text-slate-100">${Number(remaining).toFixed(2)}</td>
+                        <td className="font-semibold text-slate-900 dark:text-slate-100">₹{Number(item.total_amount).toFixed(2)}</td>
+                        <td className="text-slate-600 dark:text-slate-400">₹{Number(item.paid_amount || 0).toFixed(2)}</td>
+                        <td className="font-bold text-slate-900 dark:text-slate-100">₹{Number(remaining).toFixed(2)}</td>
                         <td>
                           <span
                             className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold leading-5 ${
@@ -222,8 +222,8 @@ export default function ContactPortal() {
               Submit Payment for {payModalItem.invoice_number}
             </h3>
             <p className="mb-4 text-sm text-slate-500 dark:text-slate-400">
-              Total: <strong>${Number(payModalItem.total_amount).toFixed(2)}</strong> | Balance Due:{' '}
-              <strong className="text-amber-600 dark:text-amber-400">${Number(payModalItem.total_amount - payModalItem.paid_amount).toFixed(2)}</strong>
+              Total: <strong>₹{Number(payModalItem.total_amount).toFixed(2)}</strong> | Balance Due:{' '}
+              <strong className="text-amber-600 dark:text-amber-400">₹{Number(payModalItem.total_amount - payModalItem.paid_amount).toFixed(2)}</strong>
             </p>
 
             {error && (
@@ -246,7 +246,7 @@ export default function ContactPortal() {
               </div>
 
               <div>
-                <label>Payment Amount ($)</label>
+                <label>Payment Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"

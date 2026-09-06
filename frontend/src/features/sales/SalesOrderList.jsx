@@ -44,7 +44,7 @@ export default function SalesOrderList() {
         amount: parseFloat(payAmount) || payModalOrder.total_amount,
         reference: `Payment for SO Invoice #${payModalOrder.id}`
       });
-      setActionSuccess(`Payment of $${payAmount} received via ${paymentMethod}! Journal Entry posted.`);
+      setActionSuccess(`Payment of ₹${payAmount} received via ${paymentMethod}! Journal Entry posted.`);
       setPayModalOrder(null);
       fetchOrders();
       setTimeout(() => setActionSuccess(null), 3500);
@@ -105,9 +105,9 @@ export default function SalesOrderList() {
                       <td className="font-medium text-slate-900">{customerName}</td>
                       <td className="text-slate-600">{productName}</td>
                       <td className="text-slate-700">{order.quantity || order.qty}</td>
-                      <td className="text-slate-700">${Number(order.unit_price).toFixed(2)}</td>
-                      <td className="text-slate-700">${Number(order.tax || 0).toFixed(2)}</td>
-                      <td className="font-semibold text-slate-900">${Number(total).toFixed(2)}</td>
+                      <td className="text-slate-700">₹{Number(order.unit_price).toFixed(2)}</td>
+                      <td className="text-slate-700">₹{Number(order.tax || 0).toFixed(2)}</td>
+                      <td className="font-semibold text-slate-900">₹{Number(total).toFixed(2)}</td>
                       <td>
                         <span className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           isInvoiced ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
@@ -150,7 +150,7 @@ export default function SalesOrderList() {
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
             <h3 className="text-lg font-bold text-slate-900 mb-2">Generate Customer Invoice for SO #{invModalOrder.id}</h3>
             <p className="text-sm text-slate-500 mb-4">
-              This will create a Customer Invoice of <strong>${Number(invModalOrder.total_amount).toFixed(2)}</strong> and automatically post a double-entry Journal Entry (Debit Accounts Receivable, Credit Sales Revenue).
+              This will create a Customer Invoice of <strong>₹{Number(invModalOrder.total_amount).toFixed(2)}</strong> and automatically post a double-entry Journal Entry (Debit Accounts Receivable, Credit Sales Revenue).
             </p>
             <form onSubmit={handleGenerateInvoice} className="space-y-4">
               <div className="flex justify-end gap-3 pt-2">
@@ -191,7 +191,7 @@ export default function SalesOrderList() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-600">Payment Amount ($)</label>
+                <label className="block text-xs font-semibold uppercase text-slate-600">Payment Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"

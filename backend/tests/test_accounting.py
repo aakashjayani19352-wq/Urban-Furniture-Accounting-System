@@ -335,4 +335,294 @@ def test_accountant_vs_admin_master_data_permissions():
     db.close()
 
 
+# ============== NEW HARDENING TESTS ==============
+
+def test_balanced_journal_entry_saves():
+    """A perfectly balanced journal entry should save successfully (201)."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {
+        "journal_id": 1,
+        "reference": "Balanced Test Entry",
+        "lines": [
+            {"account_id": 1, "debit": 500.0, "credit": 0.0, "description": "Debit leg"},
+            {"account_id": 5, "debit": 0.0, "credit": 500.0, "description": "Credit leg"}
+        ]
+    }
+    res = client.post("/api/transactions/journal-entries", json=payload, headers=headers)
+    assert res.status_code == 201
+    data = res.json()
+    assert data["entry_number"].startswith("JE-")
+    assert data["is_posted"] is True
+
+
+def test_unbalanced_entry_rolls_back_cleanly():
+    """After a rejected unbalanced entry, the DB should have no orphan JE records."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Count existing entries
+    res_before = client.get("/api/transactions/journal-entries", headers=headers)
+    count_before = len(res_before.json())
+
+    # Submit unbalanced entry (should fail)
+    payload = {
+        "journal_id": 1,
+        "reference": "Orphan Test",
+        "lines": [
+            {"account_id": 1, "debit": 999.0, "credit": 0.0},
+            {"account_id": 5, "debit": 0.0, "credit": 1.0}
+        ]
+    }
+    res = client.post("/api/transactions/journal-entries", json=payload, headers=headers)
+    assert res.status_code == 400
+
+    # Count after — should be unchanged
+    res_after = client.get("/api/transactions/journal-entries", headers=headers)
+    count_after = len(res_after.json())
+    assert count_after == count_before
+
+
+def test_both_debit_and_credit_on_line_rejected():
+    """A journal line with both debit > 0 AND credit > 0 should be rejected (422)."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {
+        "journal_id": 1,
+        "reference": "Both D+C Test",
+        "lines": [
+            {"account_id": 1, "debit": 100.0, "credit": 50.0},
+            {"account_id": 5, "debit": 0.0, "credit": 50.0}
+        ]
+    }
+    res = client.post("/api/transactions/journal-entries", json=payload, headers=headers)
+    assert res.status_code == 422
+
+
+def test_negative_amounts_rejected():
+    """Negative debit or credit values should be rejected (422)."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    payload = {
+        "journal_id": 1,
+        "reference": "Negative Test",
+        "lines": [
+            {"account_id": 1, "debit": -100.0, "credit": 0.0},
+            {"account_id": 5, "debit": 0.0, "credit": -100.0}
+        ]
+    }
+    res = client.post("/api/transactions/journal-entries", json=payload, headers=headers)
+    assert res.status_code == 422
+
+
+def test_po_bill_payment_journal_entries():
+    """Full PO→Bill→Payment chain, verify JE debits/credits against known accounts."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Create PO
+    res_po = client.post("/api/purchase-orders", json={
+        "vendor_id": 2, "product_id": 1, "quantity": 5, "unit_price": 200.0
+    }, headers=headers)
+    assert res_po.status_code == 201
+    po = res_po.json()
+    assert po["total_amount"] == 1000.0
+
+    # Convert to Bill
+    res_bill = client.post(f"/api/purchase-orders/{po['id']}/bill", json={}, headers=headers)
+    assert res_bill.status_code == 201
+    bill = res_bill.json()
+    assert bill["transaction_type"] == "purchase"
+
+    # Pay the Bill
+    res_pay = client.post("/api/transactions/payment", json={
+        "invoice_id": bill["id"],
+        "payment_method": "bank",
+        "amount": 1000.0,
+        "reference": "PO Payment test"
+    }, headers=headers)
+    assert res_pay.status_code == 201
+    assert res_pay.json()["invoice_status"] == "paid"
+
+    # Verify journal entries were created (at least 2: bill JE + payment JE)
+    res_je = client.get("/api/transactions/journal-entries", headers=headers)
+    entries = res_je.json()
+    assert len(entries) >= 2
+
+
+def test_so_invoice_payment_journal_entries():
+    """Full SO→Invoice→Payment chain, verify JE debits/credits."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Create SO
+    res_so = client.post("/api/sales-orders", json={
+        "customer_id": 1, "product_id": 1, "quantity": 3, "unit_price": 400.0, "tax": 60.0
+    }, headers=headers)
+    assert res_so.status_code == 201
+    so = res_so.json()
+    assert so["total_amount"] == 1260.0
+
+    # Convert to Invoice
+    res_inv = client.post(f"/api/sales-orders/{so['id']}/invoice", json={}, headers=headers)
+    assert res_inv.status_code == 201
+    inv = res_inv.json()
+    assert inv["transaction_type"] == "sale"
+
+    # Pay the Invoice
+    res_pay = client.post("/api/transactions/payment", json={
+        "invoice_id": inv["id"],
+        "payment_method": "cash",
+        "amount": 1260.0
+    }, headers=headers)
+    assert res_pay.status_code == 201
+    assert res_pay.json()["invoice_status"] == "paid"
+
+
+def test_expired_jwt_rejected():
+    """An expired JWT token should return 401."""
+    import jwt
+    from datetime import datetime, timedelta, timezone
+    expired_payload = {
+        "sub": "admin@test.com",
+        "role": "admin",
+        "exp": datetime.now(timezone.utc) - timedelta(hours=1)
+    }
+    expired_token = jwt.encode(expired_payload, "urban-furniture-secret-key-2024", algorithm="HS256")
+    headers = {"Authorization": f"Bearer {expired_token}"}
+    res = client.get("/api/accounts", headers=headers)
+    assert res.status_code == 401
+
+
+def test_invalid_jwt_rejected():
+    """A garbage JWT token should return 401."""
+    headers = {"Authorization": "Bearer totally.not.a.real.token"}
+    res = client.get("/api/accounts", headers=headers)
+    assert res.status_code == 401
+
+
+def test_contact_cannot_access_admin_endpoints():
+    """Contact role should get 403 on products, accounts, journals, reports."""
+    db = TestingSessionLocal()
+    contact_user = User(
+        email="restricted@test.com",
+        hashed_password=hash_password("pass123"),
+        full_name="Restricted Contact",
+        role="contact"
+    )
+    db.add(contact_user)
+    db.commit()
+    db.close()
+
+    login_res = client.post("/api/auth/login", json={"email": "restricted@test.com", "password": "pass123"})
+    token = login_res.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # All of these should be 403 for contact role
+    assert client.get("/api/products", headers=headers).status_code == 403
+    assert client.get("/api/accounts", headers=headers).status_code == 403
+    assert client.get("/api/journals", headers=headers).status_code == 403
+    assert client.get("/api/reports/profit-loss", headers=headers).status_code == 403
+    assert client.get("/api/reports/balance-sheet", headers=headers).status_code == 403
+
+
+def test_balance_sheet_balances():
+    """Assets = Liabilities + Capital (accounting equation) after a purchase + sale."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Record a sale (1000 revenue)
+    client.post("/api/transactions/sale", json={
+        "customer_id": 1, "product_id": 1, "quantity": 2, "unit_price": 500.0,
+        "tax": 0.0, "payment_method": "cash"
+    }, headers=headers)
+
+    # Record a purchase (400 expense)
+    client.post("/api/transactions/purchase", json={
+        "vendor_id": 2, "product_id": 1, "quantity": 2, "unit_price": 200.0,
+        "payment_method": "cash"
+    }, headers=headers)
+
+    # Check balance sheet
+    res_bs = client.get("/api/reports/balance-sheet", headers=headers)
+    assert res_bs.status_code == 200
+    bs = res_bs.json()
+    # A = L + C + Retained Earnings (net profit)
+    total_right_side = bs["total_liabilities"] + bs["total_capital"]
+    assert abs(bs["total_assets"] - total_right_side) < 0.02
+
+
+def test_pnl_matches_known_transactions():
+    """Create known sale + purchase, verify P&L math exactly."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Sale: 800 revenue
+    client.post("/api/transactions/sale", json={
+        "customer_id": 1, "product_id": 1, "quantity": 2, "unit_price": 400.0,
+        "tax": 0.0, "payment_method": "bank"
+    }, headers=headers)
+
+    # Purchase: 300 expense
+    client.post("/api/transactions/purchase", json={
+        "vendor_id": 2, "product_id": 1, "quantity": 3, "unit_price": 100.0,
+        "payment_method": "bank"
+    }, headers=headers)
+
+    res_pnl = client.get("/api/reports/profit-loss", headers=headers)
+    assert res_pnl.status_code == 200
+    pnl = res_pnl.json()
+    assert pnl["total_revenue"] == 800.0
+    assert pnl["total_expenses"] == 300.0
+    assert pnl["net_profit"] == 500.0
+
+
+def test_missing_fields_return_422():
+    """POST contact/product with missing required fields should return 422, not 500."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Contact missing 'name' and 'type'
+    res = client.post("/api/contacts", json={"email": "test@test.com"}, headers=headers)
+    assert res.status_code == 422
+
+    # Product missing required fields
+    res = client.post("/api/products", json={"name": "Incomplete"}, headers=headers)
+    assert res.status_code == 422
+
+
+def test_wrong_types_return_422():
+    """String where int expected should return 422."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    res = client.post("/api/purchase-orders", json={
+        "vendor_id": "not-a-number",
+        "product_id": 1,
+        "quantity": 1,
+        "unit_price": 100.0
+    }, headers=headers)
+    assert res.status_code == 422
+
+
+def test_overpayment_rejected():
+    """Payment exceeding the remaining balance should be rejected (400)."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Create unpaid invoice via sale
+    res_sale = client.post("/api/transactions/sale", json={
+        "customer_id": 1, "product_id": 1, "quantity": 1, "unit_price": 100.0,
+        "tax": 0.0, "payment_method": None
+    }, headers=headers)
+    inv = res_sale.json()
+
+    # Attempt to pay more than total
+    res_pay = client.post("/api/transactions/payment", json={
+        "invoice_id": inv["id"],
+        "payment_method": "cash",
+        "amount": 999.0
+    }, headers=headers)
+    assert res_pay.status_code == 400
+    assert "exceeds" in res_pay.json()["detail"].lower() or "remaining" in res_pay.json()["detail"].lower()
 

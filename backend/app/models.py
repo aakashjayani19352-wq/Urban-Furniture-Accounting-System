@@ -14,7 +14,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
     role = Column(String, default="invoicing_user", nullable=False)
-    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True)
+    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=True, index=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=utc_now)
 
@@ -66,7 +66,7 @@ class Journal(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     type = Column(String, nullable=False)
-    default_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)
+    default_account_id = Column(Integer, ForeignKey("accounts.id"), nullable=True, index=True)
 
     default_account = relationship("Account")
     entries = relationship("JournalEntry", back_populates="journal")
@@ -75,9 +75,9 @@ class JournalEntry(Base):
     __tablename__ = "journal_entries"
 
     id = Column(Integer, primary_key=True, index=True)
-    journal_id = Column(Integer, ForeignKey("journals.id"), nullable=False)
+    journal_id = Column(Integer, ForeignKey("journals.id"), nullable=False, index=True)
     entry_number = Column(String, unique=True, index=True, nullable=False)
-    date = Column(DateTime, default=utc_now, nullable=False)
+    date = Column(DateTime, default=utc_now, nullable=False, index=True)
     reference = Column(String, nullable=True)
     is_posted = Column(Boolean, default=True)
     created_at = Column(DateTime, default=utc_now)
@@ -89,9 +89,9 @@ class JournalEntryLine(Base):
     __tablename__ = "journal_entry_lines"
 
     id = Column(Integer, primary_key=True, index=True)
-    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=False)
-    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
-    analytic_account_id = Column(Integer, ForeignKey("analytic_accounts.id"), nullable=True)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=False, index=True)
+    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False, index=True)
+    analytic_account_id = Column(Integer, ForeignKey("analytic_accounts.id"), nullable=True, index=True)
     debit = Column(Float, default=0.0, nullable=False)
     credit = Column(Float, default=0.0, nullable=False)
     description = Column(String, nullable=True)
@@ -119,7 +119,7 @@ class Budget(Base):
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     responsible_person = Column(String, nullable=True)
-    analytic_account_id = Column(Integer, ForeignKey("analytic_accounts.id"), nullable=False)
+    analytic_account_id = Column(Integer, ForeignKey("analytic_accounts.id"), nullable=False, index=True)
     planned_amount = Column(Float, nullable=False, default=0.0)
     created_at = Column(DateTime, default=utc_now)
 
@@ -130,14 +130,14 @@ class Invoice(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     transaction_type = Column(String, nullable=False)
-    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False)
+    contact_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
     invoice_number = Column(String, unique=True, index=True, nullable=False)
     date = Column(DateTime, default=utc_now, nullable=False)
     due_date = Column(DateTime, nullable=True)
     status = Column(String, default="unpaid")
     total_amount = Column(Float, nullable=False, default=0.0)
     paid_amount = Column(Float, nullable=False, default=0.0)
-    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True, index=True)
 
     contact = relationship("Contact", back_populates="invoices")
     journal_entry = relationship("JournalEntry")
@@ -147,12 +147,12 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id = Column(Integer, primary_key=True, index=True)
-    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False)
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=False, index=True)
     payment_method = Column(String, nullable=False)
     amount = Column(Float, nullable=False)
     date = Column(DateTime, default=utc_now, nullable=False)
     reference = Column(String, nullable=True)
-    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True)
+    journal_entry_id = Column(Integer, ForeignKey("journal_entries.id"), nullable=True, index=True)
 
     invoice = relationship("Invoice", back_populates="payments")
     journal_entry = relationship("JournalEntry")
@@ -161,14 +161,14 @@ class PurchaseOrder(Base):
     __tablename__ = "purchase_orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    vendor_id = Column(Integer, ForeignKey("contacts.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    vendor_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False, default=1)
     unit_price = Column(Float, nullable=False, default=0.0)
     total_amount = Column(Float, nullable=False, default=0.0)
     status = Column(String, default="draft", nullable=False)  # draft, billed
     created_at = Column(DateTime, default=utc_now)
-    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True, index=True)
 
     vendor = relationship("Contact")
     product = relationship("Product")
@@ -178,15 +178,15 @@ class SalesOrder(Base):
     __tablename__ = "sales_orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    customer_id = Column(Integer, ForeignKey("contacts.id"), nullable=False)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("contacts.id"), nullable=False, index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, index=True)
     quantity = Column(Integer, nullable=False, default=1)
     unit_price = Column(Float, nullable=False, default=0.0)
     tax = Column(Float, nullable=False, default=0.0)
     total_amount = Column(Float, nullable=False, default=0.0)
     status = Column(String, default="draft", nullable=False)  # draft, invoiced
     created_at = Column(DateTime, default=utc_now)
-    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True)
+    invoice_id = Column(Integer, ForeignKey("invoices.id"), nullable=True, index=True)
 
     customer = relationship("Contact")
     product = relationship("Product")

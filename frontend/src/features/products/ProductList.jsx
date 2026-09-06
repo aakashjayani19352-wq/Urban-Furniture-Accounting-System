@@ -76,10 +76,10 @@ export default function ProductList() {
                           {p.type || 'goods'}
                         </span>
                       </td>
-                      <td className="text-right font-bold text-slate-900">${Number(sPrice).toFixed(2)}</td>
-                      <td className="text-right text-slate-600">${Number(cPrice).toFixed(2)}</td>
+                      <td className="text-right font-bold text-slate-900">₹{Number(sPrice).toFixed(2)}</td>
+                      <td className="text-right text-slate-600">₹{Number(cPrice).toFixed(2)}</td>
                       <td className={`text-right font-semibold ${margin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        ${Number(margin).toFixed(2)}
+                        ₹{Number(margin).toFixed(2)}
                       </td>
                       {user?.role === 'admin' && (
                         <td className="text-right">

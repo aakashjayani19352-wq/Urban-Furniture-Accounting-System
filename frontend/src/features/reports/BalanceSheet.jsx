@@ -49,18 +49,18 @@ export default function BalanceSheet() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="surface p-6 border-t-4 border-t-blue-500">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Assets</h3>
-          <p className="mt-2 text-3xl font-bold text-blue-600">${Number(report.total_assets || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-2 text-3xl font-bold text-blue-600">₹{Number(report.total_assets || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <p className="mt-1 text-xs text-slate-500">Cash, Bank, Accounts Receivable</p>
         </div>
         <div className="surface p-6 border-t-4 border-t-red-500">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Liabilities</h3>
-          <p className="mt-2 text-3xl font-bold text-red-600">${Number(report.total_liabilities || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-2 text-3xl font-bold text-red-600">₹{Number(report.total_liabilities || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <p className="mt-1 text-xs text-slate-500">Accounts Payable & Obligations</p>
         </div>
         <div className="surface p-6 border-t-4 border-t-emerald-500">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Equity & Capital</h3>
-          <p className="mt-2 text-3xl font-bold text-emerald-600">${Number(report.total_capital || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-          <p className="mt-1 text-xs text-slate-500">Share Capital + Retained Earnings (${Number(report.net_profit || 0).toFixed(2)})</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-600">₹{Number(report.total_capital || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-1 text-xs text-slate-500">Share Capital + Retained Earnings (₹{Number(report.net_profit || 0).toFixed(2)})</p>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export default function BalanceSheet() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                  <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -99,7 +99,7 @@ export default function BalanceSheet() {
                       <Cell key={`cell-eq-${index}`} fill={COLORS[(index + 2) % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                  <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -110,7 +110,7 @@ export default function BalanceSheet() {
       {/* Detailed Breakdown Tables */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="surface">
-          <div className="bg-slate-50 px-6 py-3 border-b font-bold text-slate-800 text-sm">Assets Breakdown</div>
+          <div className="bg-slate-50 dark:bg-slate-800/60 px-6 py-3 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-100 text-sm">Assets Breakdown</div>
           <table className="data-table">
             <thead>
               <tr>
@@ -122,7 +122,7 @@ export default function BalanceSheet() {
               {report.assets_breakdown?.map((a, i) => (
                 <tr key={i}>
                   <td>{a.account_code} - {a.account_name}</td>
-                  <td className="text-right font-semibold text-slate-800">${Number(a.balance).toFixed(2)}</td>
+                  <td className="text-right font-semibold text-slate-800">₹{Number(a.balance).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -130,7 +130,7 @@ export default function BalanceSheet() {
         </div>
 
         <div className="surface">
-          <div className="bg-slate-50 px-6 py-3 border-b font-bold text-slate-800 text-sm">Liabilities & Equity Breakdown</div>
+          <div className="bg-slate-50 dark:bg-slate-800/60 px-6 py-3 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-100 text-sm">Liabilities & Equity Breakdown</div>
           <table className="data-table">
             <thead>
               <tr>
@@ -142,13 +142,13 @@ export default function BalanceSheet() {
               {report.liabilities_breakdown?.map((l, i) => (
                 <tr key={`l-${i}`}>
                   <td>{l.account_code} - {l.account_name}</td>
-                  <td className="text-right font-semibold text-slate-800">${Number(l.balance).toFixed(2)}</td>
+                  <td className="text-right font-semibold text-slate-800">₹{Number(l.balance).toFixed(2)}</td>
                 </tr>
               ))}
               {report.capital_breakdown?.map((c, i) => (
                 <tr key={`c-${i}`}>
                   <td>{c.account_code} - {c.account_name}</td>
-                  <td className="text-right font-semibold text-emerald-700">${Number(c.balance).toFixed(2)}</td>
+                  <td className="text-right font-semibold text-emerald-700">₹{Number(c.balance).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

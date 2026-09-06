@@ -98,8 +98,8 @@ export default function BudgetList() {
 
       {/* Budgets Table */}
       <div className="surface">
-        <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
-          <h2 className="text-base font-bold text-slate-800">Active Budgets</h2>
+        <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex justify-between items-center">
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Active Budgets</h2>
           <span className="text-xs text-slate-500">{budgets.length} Budgets</span>
         </div>
         <div className="overflow-x-auto">
@@ -134,7 +134,7 @@ export default function BudgetList() {
                         </span>
                       </td>
                       <td className="text-slate-600">{b.responsible_person || 'Finance Admin'}</td>
-                      <td className="font-bold text-slate-900">${Number(b.planned_amount).toFixed(2)}</td>
+                      <td className="font-bold text-slate-900">₹{Number(b.planned_amount).toFixed(2)}</td>
                       <td className="text-xs text-slate-500">
                         {new Date(b.start_date).toLocaleDateString()} - {new Date(b.end_date).toLocaleDateString()}
                       </td>
@@ -149,8 +149,8 @@ export default function BudgetList() {
 
       {/* Analytic Accounts Table */}
       <div className="surface">
-        <div className="px-6 py-4 border-b bg-slate-50 flex justify-between items-center">
-          <h2 className="text-base font-bold text-slate-800">Analytic Accounts (Cost Centers)</h2>
+        <div className="px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex justify-between items-center">
+          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">Analytic Accounts (Cost Centers)</h2>
           <span className="text-xs text-slate-500">{analytics.length} Accounts</span>
         </div>
         <div className="overflow-x-auto">
@@ -259,7 +259,7 @@ export default function BudgetList() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-600">Planned Amount ($) *</label>
+                <label className="block text-xs font-semibold uppercase text-slate-600">Planned Amount (₹) *</label>
                 <input
                   type="number"
                   step="0.01"

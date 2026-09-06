@@ -44,6 +44,10 @@ export default function JournalEntryList() {
   const totalCredit = lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
   const isBalanced = Math.abs(totalDebit - totalCredit) <= 0.01 && totalDebit > 0;
 
+  // P5: O(1) account lookup map instead of O(n) .find() per line
+  const accountMap = {};
+  accounts.forEach(a => { accountMap[a.id] = a; });
+
   const handleLineChange = (index, field, value) => {
     const updated = [...lines];
     updated[index][field] = value;
@@ -116,54 +120,56 @@ export default function JournalEntryList() {
             const entryCredit = entry.lines?.reduce((sum, l) => sum + (l.credit || 0), 0) || 0;
 
             return (
-              <div key={entry.id} className="surface overflow-hidden">
-                <div className="bg-slate-50 px-6 py-3 border-b flex justify-between items-center">
-                  <div>
-                    <span className="font-bold text-slate-900 mr-3">{entry.entry_number}</span>
-                    <span className="text-sm text-slate-600 font-medium">{entry.reference || 'General Transaction'}</span>
+              <div key={entry.id} className="surface overflow-hidden border border-slate-200/80 dark:border-amber-500/15">
+                <div className="border-b border-slate-200/80 bg-slate-50/80 px-6 py-3.5 flex justify-between items-center dark:border-amber-500/15 dark:bg-slate-800/60">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono font-bold text-slate-900 dark:text-amber-400 text-sm tracking-wide">{entry.entry_number}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-200 font-medium">{entry.reference || 'General Transaction'}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-500">{new Date(entry.date).toLocaleDateString()}</span>
-                    <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{new Date(entry.date).toLocaleDateString()}</span>
+                    <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border dark:border-emerald-500/30">
                       ✓ Balanced & Posted
                     </span>
                   </div>
                 </div>
 
-                <table className="min-w-full divide-y divide-slate-200">
-                  <thead className="bg-white">
-                    <tr>
-                      <th className="px-6 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase">Account</th>
-                      <th className="px-6 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase">Description</th>
-                      <th className="px-6 py-2.5 text-right text-xs font-semibold text-slate-500 uppercase">Debit ($)</th>
-                      <th className="px-6 py-2.5 text-right text-xs font-semibold text-slate-500 uppercase">Credit ($)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {entry.lines?.map((line, idx) => {
-                      const acc = accounts.find(a => a.id === line.account_id);
-                      const accLabel = acc ? `${acc.code} - ${acc.name}` : `Account #${line.account_id}`;
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200/80 dark:divide-slate-800/60">
+                    <thead className="bg-slate-100/75 dark:bg-slate-900/90">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-amber-400/80">Account</th>
+                        <th className="px-6 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-amber-400/80">Description</th>
+                        <th className="px-6 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-amber-400/80">Debit (₹)</th>
+                        <th className="px-6 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-amber-400/80">Credit (₹)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 bg-white dark:bg-slate-900/40">
+                      {entry.lines?.map((line, idx) => {
+                        const acc = accountMap[line.account_id];
+                        const accLabel = acc ? `${acc.code} - ${acc.name}` : `Account #${line.account_id}`;
 
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50/50">
-                          <td className="px-6 py-2.5 text-sm font-medium text-slate-900">{accLabel}</td>
-                          <td className="px-6 py-2.5 text-sm text-slate-500">{line.description || '-'}</td>
-                          <td className="px-6 py-2.5 text-sm text-right font-semibold text-slate-800">
-                            {line.debit > 0 ? `$${Number(line.debit).toFixed(2)}` : '-'}
-                          </td>
-                          <td className="px-6 py-2.5 text-sm text-right font-semibold text-slate-800">
-                            {line.credit > 0 ? `$${Number(line.credit).toFixed(2)}` : '-'}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    <tr className="bg-slate-50 font-bold text-sm">
-                      <td colSpan="2" className="px-6 py-2.5 text-right text-slate-700">Total:</td>
-                      <td className="px-6 py-2.5 text-right text-blue-600">${entryDebit.toFixed(2)}</td>
-                      <td className="px-6 py-2.5 text-right text-blue-600">${entryCredit.toFixed(2)}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                        return (
+                          <tr key={idx} className="transition-colors hover:bg-amber-50/40 dark:hover:bg-slate-800/50">
+                            <td className="px-6 py-3 text-sm font-semibold text-slate-900 dark:text-slate-100">{accLabel}</td>
+                            <td className="px-6 py-3 text-sm text-slate-600 dark:text-slate-300">{line.description || '-'}</td>
+                            <td className="px-6 py-3 text-sm text-right font-mono font-bold text-slate-900 dark:text-emerald-400">
+                              {line.debit > 0 ? `₹${Number(line.debit).toFixed(2)}` : <span className="text-slate-300 dark:text-slate-600 font-normal">-</span>}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-right font-mono font-bold text-slate-900 dark:text-amber-400">
+                              {line.credit > 0 ? `₹${Number(line.credit).toFixed(2)}` : <span className="text-slate-300 dark:text-slate-600 font-normal">-</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      <tr className="border-t-2 border-slate-200/80 bg-slate-50/90 font-bold text-sm dark:border-slate-700/80 dark:bg-slate-800/70">
+                        <td colSpan="2" className="px-6 py-3 text-right text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wider">Total:</td>
+                        <td className="px-6 py-3 text-right font-mono text-blue-600 dark:text-blue-400">₹{entryDebit.toFixed(2)}</td>
+                        <td className="px-6 py-3 text-right font-mono text-blue-600 dark:text-blue-400">₹{entryCredit.toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             );
           })
@@ -172,15 +178,15 @@ export default function JournalEntryList() {
 
       {/* New Journal Entry Modal with Live Balance Validation */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-xl my-8">
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Create Balanced Journal Entry</h3>
-            <p className="text-xs text-slate-500 mb-4">
+        <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="surface max-w-2xl w-full p-6 shadow-2xl my-8 dark:bg-slate-900 dark:border dark:border-amber-500/20">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-1">Create Balanced Journal Entry</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               Every entry must satisfy the fundamental double-entry rule: <strong>Total Debits = Total Credits</strong>.
             </p>
 
             {errorMsg && (
-              <div className="mb-4 p-3 rounded bg-red-50 text-red-700 text-sm border border-red-200">
+              <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm border border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900/50">
                 ⚠️ {errorMsg}
               </div>
             )}
@@ -188,11 +194,11 @@ export default function JournalEntryList() {
             <form onSubmit={handleCreateEntry} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-600">Journal</label>
+                  <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400">Journal</label>
                   <select
                     value={selectedJournal}
                     onChange={(e) => setSelectedJournal(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                    className="w-full mt-1 px-3 py-2 border rounded-lg dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   >
                     {journals.map(j => (
                       <option key={j.id} value={j.id}>{j.name} ({j.type})</option>
@@ -200,28 +206,28 @@ export default function JournalEntryList() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase text-slate-600">Reference / Memo</label>
+                  <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400">Reference / Memo</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Month-end Depreciation"
                     value={reference}
                     onChange={(e) => setReference(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 border rounded-lg"
+                    className="w-full mt-1 px-3 py-2 border rounded-lg dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase text-slate-600 mb-2">Entry Lines</label>
+                <label className="block text-xs font-semibold uppercase text-slate-600 dark:text-slate-400 mb-2">Entry Lines</label>
                 <div className="space-y-2">
                   {lines.map((line, idx) => (
-                    <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded-lg border">
+                    <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                       <div className="col-span-5">
                         <select
                           value={line.account_id}
                           onChange={(e) => handleLineChange(idx, 'account_id', e.target.value)}
-                          className="w-full text-xs p-1.5 border rounded"
+                          className="w-full text-xs p-1.5 border rounded dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                         >
                           {accounts.map(a => (
                             <option key={a.id} value={a.id}>{a.code} - {a.name} ({a.type})</option>
@@ -235,7 +241,7 @@ export default function JournalEntryList() {
                           placeholder="Debit"
                           value={line.debit || ''}
                           onChange={(e) => handleLineChange(idx, 'debit', e.target.value)}
-                          className="w-full text-xs p-1.5 border rounded text-right"
+                          className="w-full text-xs p-1.5 border rounded text-right dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                         />
                       </div>
                       <div className="col-span-3">
@@ -245,7 +251,7 @@ export default function JournalEntryList() {
                           placeholder="Credit"
                           value={line.credit || ''}
                           onChange={(e) => handleLineChange(idx, 'credit', e.target.value)}
-                          className="w-full text-xs p-1.5 border rounded text-right"
+                          className="w-full text-xs p-1.5 border rounded text-right dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                         />
                       </div>
                       <div className="col-span-1 text-center">
@@ -253,7 +259,7 @@ export default function JournalEntryList() {
                           <button
                             type="button"
                             onClick={() => removeLine(idx)}
-                            className="text-red-500 hover:text-red-700 font-bold"
+                            className="text-red-500 hover:text-red-400 font-bold"
                           >
                             ✕
                           </button>
@@ -265,7 +271,7 @@ export default function JournalEntryList() {
                 <button
                   type="button"
                   onClick={addLine}
-                  className="mt-2 text-xs text-blue-600 font-semibold hover:underline"
+                  className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline"
                 >
                   + Add Line
                 </button>
@@ -273,14 +279,16 @@ export default function JournalEntryList() {
 
               {/* Balance Indicator Bar */}
               <div className={`p-3 rounded-lg border flex justify-between items-center ${
-                isBalanced ? 'bg-emerald-50 border-emerald-300 text-emerald-800' : 'bg-amber-50 border-amber-300 text-amber-800'
+                isBalanced 
+                  ? 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-500/40 dark:text-emerald-300' 
+                  : 'bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/50 dark:border-amber-500/40 dark:text-amber-300'
               }`}>
                 <div className="text-xs font-semibold">
                   {isBalanced ? '✓ Balanced: Ready to Post' : '⚠️ Unbalanced: Debits must equal Credits'}
                 </div>
                 <div className="text-sm font-bold flex gap-4">
-                  <span>Debits: ${totalDebit.toFixed(2)}</span>
-                  <span>Credits: ${totalCredit.toFixed(2)}</span>
+                  <span>Debits: ₹{totalDebit.toFixed(2)}</span>
+                  <span>Credits: ₹{totalCredit.toFixed(2)}</span>
                 </div>
               </div>
 

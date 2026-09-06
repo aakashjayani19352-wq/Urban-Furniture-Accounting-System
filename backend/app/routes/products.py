@@ -24,6 +24,8 @@ def create_product(
 def list_products(
     category: Optional[str] = None,
     product_type: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
@@ -32,7 +34,7 @@ def list_products(
         query = query.filter(Product.category == category)
     if product_type:
         query = query.filter(Product.type == product_type)
-    return query.all()
+    return query.offset(skip).limit(limit).all()
 
 @router.get("/{id}", response_model=ProductResponse)
 def get_product(

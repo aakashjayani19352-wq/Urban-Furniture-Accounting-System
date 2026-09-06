@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 // Fallback Mock Data in case backend is offline
 const fallbackMockData = {
@@ -38,10 +38,10 @@ const fallbackMockData = {
     { id: 1, transaction_type: 'sale', contact_id: 1, invoice_number: 'INV-20260905-0001', total_amount: 1050.0, paid_amount: 1050.0, status: 'paid', date: new Date().toISOString() }
   ],
   '/transactions/journal-entries': [
-    { 
-      id: 1, 
-      entry_number: 'JE-INIT-001', 
-      reference: 'Initial Capital Deposit', 
+    {
+      id: 1,
+      entry_number: 'JE-INIT-001',
+      reference: 'Initial Capital Deposit',
       date: new Date().toISOString(),
       lines: [
         { account_id: 2, debit: 50000.0, credit: 0.0, description: 'Initial Cash Deposit' },

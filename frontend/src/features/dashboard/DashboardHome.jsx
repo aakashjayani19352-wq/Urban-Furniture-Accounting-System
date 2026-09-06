@@ -46,7 +46,7 @@ export default function DashboardHome() {
           <div className="absolute top-0 right-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-amber-500/10 blur-2xl group-hover:bg-amber-500/20 transition-all" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Gross Sales Revenue</h3>
           <p className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-            ${Number(stats.totalSales).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            ₹{Number(stats.totalSales).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </p>
           <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <span>✓ Invoiced Customer Revenue</span>
@@ -57,7 +57,7 @@ export default function DashboardHome() {
           <div className="absolute top-0 right-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-purple-500/10 blur-2xl group-hover:bg-purple-500/20 transition-all" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Purchases & Expenses</h3>
           <p className="mt-4 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-            ${Number(stats.totalPurchases).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            ₹{Number(stats.totalPurchases).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </p>
           <div className="mt-3 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
             <span>Billed Vendor Expenditure</span>
@@ -68,7 +68,7 @@ export default function DashboardHome() {
           <div className="absolute top-0 right-0 h-24 w-24 translate-x-6 -translate-y-6 rounded-full bg-amber-500/10 blur-2xl group-hover:bg-amber-500/20 transition-all" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Net Operating Profit</h3>
           <p className={`mt-4 text-3xl font-extrabold tracking-tight ${stats.netProfit >= 0 ? 'text-amber-500 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${Number(stats.netProfit).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            ₹{Number(stats.netProfit).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </p>
           <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-amber-600 dark:text-amber-400">
             <span>Revenue Minus COGS</span>

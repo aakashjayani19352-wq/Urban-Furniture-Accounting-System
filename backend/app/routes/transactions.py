@@ -1,7 +1,9 @@
+import logging
+import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import (
     Account, Journal, JournalEntry, JournalEntryLine, 
@@ -17,7 +19,15 @@ from app.schemas import (
 )
 from app.auth import get_current_user, require_role, get_contact_id_for_user
 
+logger = logging.getLogger("urban_accounting")
+
 router = APIRouter(prefix="/api", tags=["Transactions & Accounting"])
+
+def _generate_number(prefix: str) -> str:
+    """Generate a collision-safe document number using timestamp + short uuid."""
+    ts = datetime.now(timezone.utc).strftime('%Y%m%d')
+    short_id = uuid.uuid4().hex[:6].upper()
+    return f"{prefix}-{ts}-{short_id}"
 
 # Helper function to create & validate balanced journal entry
 def create_balanced_entry(db: Session, journal_id: int, lines: list, reference: str = None):
@@ -30,8 +40,7 @@ def create_balanced_entry(db: Session, journal_id: int, lines: list, reference: 
             detail=f"Unbalanced journal entry: Total Debit ({total_debit:.2f}) does not equal Total Credit ({total_credit:.2f})"
         )
 
-    count = db.query(JournalEntry).count() + 1
-    entry_num = f"JE-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
+    entry_num = _generate_number("JE")
 
     entry = JournalEntry(
         journal_id=journal_id,
@@ -58,14 +67,16 @@ def create_balanced_entry(db: Session, journal_id: int, lines: list, reference: 
 # Chart of Accounts Endpoints
 @router.get("/accounts", response_model=List[AccountResponse])
 def list_accounts(
-    account_type: Optional[str] = None, 
+    account_type: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 200,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
     query = db.query(Account)
     if account_type:
         query = query.filter(Account.type == account_type)
-    return query.order_by(Account.code.asc()).all()
+    return query.order_by(Account.code.asc()).offset(skip).limit(limit).all()
 
 @router.post("/accounts", response_model=AccountResponse, status_code=201)
 def create_account(
@@ -136,8 +147,7 @@ def record_sale(
     ]
 
     is_paid = data.payment_method in ["cash", "bank"]
-    count = db.query(Invoice).count() + 1
-    inv_num = f"INV-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
+    inv_num = _generate_number("INV")
 
     try:
         entry = create_balanced_entry(db, journal.id, lines, f"Sale #{product.name}")
@@ -159,7 +169,8 @@ def record_sale(
     except Exception as e:
         db.rollback()
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"record_sale error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to record sale. Please try again.")
 
 # Purchase Transaction Flow
 @router.post("/transactions/purchase", response_model=InvoiceResponse, status_code=201)
@@ -195,8 +206,7 @@ def record_purchase(
     ]
 
     is_paid = data.payment_method in ["cash", "bank"]
-    count = db.query(Invoice).count() + 1
-    bill_num = f"BILL-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
+    bill_num = _generate_number("BILL")
 
     try:
         entry = create_balanced_entry(db, journal.id, lines, f"Purchase #{product.name}")
@@ -218,7 +228,8 @@ def record_purchase(
     except Exception as e:
         db.rollback()
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"record_purchase error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to record purchase. Please try again.")
 
 # Payment Processing
 @router.post("/transactions/payment", status_code=201)
@@ -282,11 +293,14 @@ def record_payment(
     except Exception as e:
         db.rollback()
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"record_payment error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to record payment. Please try again.")
 
 @router.get("/transactions/invoices", response_model=List[InvoiceResponse])
 def list_invoices(
     transaction_type: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
@@ -298,15 +312,19 @@ def list_invoices(
         query = query.filter(Invoice.contact_id == contact_id)
     if transaction_type:
         query = query.filter(Invoice.transaction_type == transaction_type)
-    return query.order_by(Invoice.date.desc()).all()
+    return query.order_by(Invoice.date.desc()).offset(skip).limit(limit).all()
 
 # List Journal Entries
 @router.get("/transactions/journal-entries", response_model=List[JournalEntryResponse])
 def list_journal_entries(
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db), 
     current_user: User = Depends(require_role(["admin", "invoicing_user"]))
 ):
-    return db.query(JournalEntry).order_by(JournalEntry.date.desc()).all()
+    return db.query(JournalEntry).options(
+        joinedload(JournalEntry.lines)
+    ).order_by(JournalEntry.date.desc()).offset(skip).limit(limit).all()
 
 # Create Journal
 @router.post("/journals", response_model=JournalResponse, status_code=201)
@@ -323,14 +341,17 @@ def create_journal(
 
 # Purchase Orders Endpoints
 @router.get("/purchase-orders", response_model=List[PurchaseOrderResponse])
-def list_purchase_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    query = db.query(PurchaseOrder)
+def list_purchase_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    query = db.query(PurchaseOrder).options(
+        joinedload(PurchaseOrder.vendor),
+        joinedload(PurchaseOrder.product)
+    )
     if current_user.role == "contact":
         contact_id = get_contact_id_for_user(db, current_user)
         if not contact_id:
             return []
         query = query.filter(PurchaseOrder.vendor_id == contact_id)
-    return query.order_by(PurchaseOrder.created_at.desc()).all()
+    return query.order_by(PurchaseOrder.created_at.desc()).offset(skip).limit(limit).all()
 
 @router.post("/purchase-orders", response_model=PurchaseOrderResponse, status_code=201)
 def create_purchase_order(
@@ -387,8 +408,7 @@ def convert_po_to_bill(
         {"account_id": ap_acc.id, "debit": 0.0, "credit": po.total_amount, "description": f"Payable for PO #{po.id} - {product.name}"}
     ]
 
-    count = db.query(Invoice).count() + 1
-    bill_num = f"BILL-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
+    bill_num = _generate_number("BILL")
 
     try:
         entry = create_balanced_entry(db, journal.id, lines, f"Vendor Bill for PO #{po.id}")
@@ -414,18 +434,22 @@ def convert_po_to_bill(
     except Exception as e:
         db.rollback()
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"convert_po_to_bill error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to convert PO to bill. Please try again.")
 
 # Sales Orders Endpoints
 @router.get("/sales-orders", response_model=List[SalesOrderResponse])
-def list_sales_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    query = db.query(SalesOrder)
+def list_sales_orders(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    query = db.query(SalesOrder).options(
+        joinedload(SalesOrder.customer),
+        joinedload(SalesOrder.product)
+    )
     if current_user.role == "contact":
         contact_id = get_contact_id_for_user(db, current_user)
         if not contact_id:
             return []
         query = query.filter(SalesOrder.customer_id == contact_id)
-    return query.order_by(SalesOrder.created_at.desc()).all()
+    return query.order_by(SalesOrder.created_at.desc()).offset(skip).limit(limit).all()
 
 @router.post("/sales-orders", response_model=SalesOrderResponse, status_code=201)
 def create_sales_order(
@@ -483,8 +507,7 @@ def convert_so_to_invoice(
         {"account_id": sales_acc.id, "debit": 0.0, "credit": so.total_amount, "description": f"Revenue for SO #{so.id} - {product.name}"}
     ]
 
-    count = db.query(Invoice).count() + 1
-    inv_num = f"INV-{datetime.now(timezone.utc).strftime('%Y%m%d')}-{count:04d}"
+    inv_num = _generate_number("INV")
 
     try:
         entry = create_balanced_entry(db, journal.id, lines, f"Customer Invoice for SO #{so.id}")
@@ -510,4 +533,5 @@ def convert_so_to_invoice(
     except Exception as e:
         db.rollback()
         if isinstance(e, HTTPException): raise e
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"convert_so_to_invoice error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to convert SO to invoice. Please try again.")

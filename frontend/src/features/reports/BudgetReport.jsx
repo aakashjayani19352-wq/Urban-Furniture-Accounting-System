@@ -41,7 +41,7 @@ export default function BudgetReport() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
-                <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
                 <Legend />
                 <Bar dataKey="Planned" fill="#2563eb" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="Actual" fill="#10b981" radius={[4, 4, 0, 0]} />
@@ -52,7 +52,7 @@ export default function BudgetReport() {
       </div>
 
       <div className="surface overflow-hidden">
-        <div className="bg-slate-50 px-6 py-4 border-b font-bold text-slate-800 text-sm">Budget Analysis Table</div>
+        <div className="bg-slate-50 dark:bg-slate-800/60 px-6 py-4 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-100 text-sm">Budget Analysis Table</div>
         <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
@@ -60,9 +60,9 @@ export default function BudgetReport() {
                 <th>Budget Name</th>
                 <th>Cost Center / Analytic</th>
                 <th>Type</th>
-                <th className="text-right">Planned ($)</th>
-                <th className="text-right">Actual ($)</th>
-                <th className="text-right">Variance ($)</th>
+                <th className="text-right">Planned (₹)</th>
+                <th className="text-right">Actual (₹)</th>
+                <th className="text-right">Variance (₹)</th>
                 <th className="text-right">Achievement</th>
               </tr>
             </thead>
@@ -83,10 +83,10 @@ export default function BudgetReport() {
                         {b.type?.toUpperCase()}
                       </span>
                     </td>
-                    <td className="text-right font-bold text-slate-900">${Number(b.planned_amount).toFixed(2)}</td>
-                    <td className="text-right font-bold text-emerald-600">${Number(b.actual_amount).toFixed(2)}</td>
+                    <td className="text-right font-bold text-slate-900">₹{Number(b.planned_amount).toFixed(2)}</td>
+                    <td className="text-right font-bold text-emerald-600">₹{Number(b.actual_amount).toFixed(2)}</td>
                     <td className={`text-right font-bold ${b.variance >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                      ${Number(b.variance).toFixed(2)}
+                      ₹{Number(b.variance).toFixed(2)}
                     </td>
                     <td className="text-right">
                       <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${

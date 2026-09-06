@@ -46,18 +46,18 @@ export default function ProfitLoss() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="surface p-6 border-t-4 border-t-emerald-500">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Revenue / Income</h3>
-          <p className="mt-2 text-3xl font-bold text-emerald-600">${Number(report.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-600">₹{Number(report.total_revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <p className="mt-1 text-xs text-slate-500">Sales orders & recognized income</p>
         </div>
         <div className="surface p-6 border-t-4 border-t-red-500">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Operating Expenses</h3>
-          <p className="mt-2 text-3xl font-bold text-red-600">${Number(report.total_expenses || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+          <p className="mt-2 text-3xl font-bold text-red-600">₹{Number(report.total_expenses || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           <p className="mt-1 text-xs text-slate-500">COGS, vendor bills & operating costs</p>
         </div>
         <div className="surface p-6 border-t-4 border-t-blue-500">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Net Profit</h3>
           <p className={`mt-2 text-3xl font-bold ${report.net_profit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-            ${Number(report.net_profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            ₹{Number(report.net_profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </p>
           <p className="mt-1 text-xs text-slate-500">
             {report.total_revenue > 0 ? `${((report.net_profit / report.total_revenue) * 100).toFixed(1)}% profit margin` : '0% margin'}
@@ -80,7 +80,7 @@ export default function ProfitLoss() {
                       <Cell key={`cell-exp-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                  <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -95,7 +95,7 @@ export default function ProfitLoss() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="category" />
                 <YAxis />
-                <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Tooltip formatter={(value) => `₹${Number(value).toFixed(2)}`} />
                 <Legend />
                 <Bar dataKey="Revenue" fill="#10b981" />
                 <Bar dataKey="Expenses" fill="#ef4444" />
@@ -109,19 +109,19 @@ export default function ProfitLoss() {
       {/* Breakdown Tables */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="surface">
-          <div className="bg-slate-50 px-6 py-3 border-b font-bold text-slate-800 text-sm">Revenue Accounts</div>
+          <div className="bg-slate-50 dark:bg-slate-800/60 px-6 py-3 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-100 text-sm">Revenue Accounts</div>
           <table className="data-table">
             <thead>
               <tr>
                 <th>Account</th>
-                <th className="text-right">Total ($)</th>
+                <th className="text-right">Total (₹)</th>
               </tr>
             </thead>
             <tbody>
               {report.revenue_breakdown?.map((r, i) => (
                 <tr key={i}>
                   <td>{r.account_code} - {r.account_name}</td>
-                  <td className="text-right font-semibold text-emerald-600">${Number(r.amount).toFixed(2)}</td>
+                  <td className="text-right font-semibold text-emerald-600">₹{Number(r.amount).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -129,19 +129,19 @@ export default function ProfitLoss() {
         </div>
 
         <div className="surface">
-          <div className="bg-slate-50 px-6 py-3 border-b font-bold text-slate-800 text-sm">Expense Accounts</div>
+          <div className="bg-slate-50 dark:bg-slate-800/60 px-6 py-3 border-b border-slate-200/80 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-100 text-sm">Expense Accounts</div>
           <table className="data-table">
             <thead>
               <tr>
                 <th>Account</th>
-                <th className="text-right">Total ($)</th>
+                <th className="text-right">Total (₹)</th>
               </tr>
             </thead>
             <tbody>
               {report.expense_breakdown?.map((e, i) => (
                 <tr key={i}>
                   <td>{e.account_code} - {e.account_name}</td>
-                  <td className="text-right font-semibold text-red-600">${Number(e.amount).toFixed(2)}</td>
+                  <td className="text-right font-semibold text-red-600">₹{Number(e.amount).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

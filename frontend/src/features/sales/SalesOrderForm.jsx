@@ -109,7 +109,7 @@ export default function SalesOrderForm() {
               className="w-full mt-1 px-3 py-2 border rounded-lg"
             >
               {products.map((p) => (
-                <option key={p.id} value={p.id}>{p.name} - Price: ${Number(p.sales_price).toFixed(2)}</option>
+                <option key={p.id} value={p.id}>{p.name} - Price: ₹{Number(p.sales_price).toFixed(2)}</option>
               ))}
             </select>
           </div>
@@ -127,7 +127,7 @@ export default function SalesOrderForm() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-600">Unit Price ($) *</label>
+              <label className="block text-xs font-semibold uppercase text-slate-600">Unit Price (₹) *</label>
               <input
                 type="number"
                 step="0.01"
@@ -139,7 +139,7 @@ export default function SalesOrderForm() {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-600">Tax ($)</label>
+              <label className="block text-xs font-semibold uppercase text-slate-600">Tax (₹)</label>
               <input
                 type="number"
                 step="0.01"
@@ -153,7 +153,7 @@ export default function SalesOrderForm() {
 
           <div className="p-4 rounded-lg bg-slate-50 border flex justify-between items-center">
             <span className="font-medium text-slate-700">Estimated Total (incl. Tax):</span>
-            <span className="text-2xl font-bold text-slate-900">${total.toFixed(2)}</span>
+            <span className="text-2xl font-bold text-slate-900">₹{total.toFixed(2)}</span>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

@@ -1,6 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from app.database import get_db
 from app.models import Contact, User, Invoice, SalesOrder, PurchaseOrder
 from app.schemas import ContactCreate, ContactResponse
@@ -23,6 +24,8 @@ def create_contact(
 @router.get("", response_model=List[ContactResponse])
 def list_contacts(
     contact_type: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -33,8 +36,8 @@ def list_contacts(
             return []
         query = query.filter(Contact.id == contact_id)
     elif contact_type:
-        query = query.filter(Contact.type == contact_type)
-    return query.all()
+        query = query.filter(or_(Contact.type == contact_type, Contact.type == "both"))
+    return query.offset(skip).limit(limit).all()
 
 @router.get("/{id}", response_model=ContactResponse)
 def get_contact(

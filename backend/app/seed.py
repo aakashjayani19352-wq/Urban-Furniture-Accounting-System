@@ -222,7 +222,7 @@ def seed_database(force: bool = False):
             db.add(b)
         db.flush()
 
-        print("Seeding Initial Equity Capital ($75,000)...")
+        print("Seeding Initial Equity Capital (₹75,000)...")
         gen_journal = journal_map["general"]
         bank_journal = journal_map["bank"]
         cash_journal = journal_map["cash"]

@@ -1,6 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Optional, List, Literal
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 
 # Auth & User Schemas
 class UserCreate(BaseModel):
@@ -31,7 +31,7 @@ class TokenResponse(BaseModel):
 # Contact Schemas
 class ContactCreate(BaseModel):
     name: str = Field(..., min_length=1)
-    type: str # customer, vendor, both
+    type: Literal["customer", "vendor", "both"]
     email: Optional[str] = None
     mobile: Optional[str] = None
     address: Optional[str] = None
@@ -49,7 +49,7 @@ class ContactResponse(ContactCreate):
 # Product Schemas
 class ProductCreate(BaseModel):
     name: str = Field(..., min_length=1)
-    type: str # goods, service, combo
+    type: Literal["goods", "service", "combo"]
     sales_price: float = Field(..., ge=0.0)
     cost_price: float = Field(..., ge=0.0)
     category: Optional[str] = None
@@ -64,7 +64,7 @@ class ProductResponse(ProductCreate):
 class AccountCreate(BaseModel):
     code: str = Field(..., min_length=1)
     name: str = Field(..., min_length=1)
-    type: str # asset, liability, expense, income, capital
+    type: Literal["asset", "liability", "expense", "income", "capital"]
 
 class AccountResponse(AccountCreate):
     id: int
@@ -134,12 +134,18 @@ class PaymentCreate(BaseModel):
 # Journal Entry Line Schema
 class JournalEntryLineSchema(BaseModel):
     account_id: int
-    debit: float = 0.0
-    credit: float = 0.0
+    debit: float = Field(default=0.0, ge=0.0)
+    credit: float = Field(default=0.0, ge=0.0)
     description: Optional[str] = None
     analytic_account_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='after')
+    def check_not_both_debit_and_credit(self):
+        if self.debit > 0 and self.credit > 0:
+            raise ValueError('A journal line cannot have both debit and credit > 0')
+        return self
 
 class JournalEntryCreate(BaseModel):
     journal_id: int
@@ -152,6 +158,7 @@ class JournalEntryResponse(BaseModel):
     entry_number: str
     date: datetime
     reference: Optional[str]
+    is_posted: bool = True
     lines: List[JournalEntryLineSchema]
 
     model_config = ConfigDict(from_attributes=True)
