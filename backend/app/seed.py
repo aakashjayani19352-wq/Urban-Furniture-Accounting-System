@@ -163,11 +163,11 @@ def seed_database(force: bool = False):
 
         print("Seeding Users...")
         users = [
-            User(email="admin@urbanfurniture.com", hashed_password=hash_password("admin123"), full_name="Aakash Jayani (Owner)", role="admin"),
-            User(email="accountant@urbanfurniture.com", hashed_password=hash_password("accountant123"), full_name="Chandan Shah (Chief Accountant)", role="invoicing_user"),
-            User(email="clerk@urbanfurniture.com", hashed_password=hash_password("clerk123"), full_name="Rudra Patel (Ledger Officer)", role="invoicing_user"),
-            User(email="customer@tejas.com", hashed_password=hash_password("customer123"), full_name="Tejas Sharma (Client Portal)", role="contact", contact_id=customers[0].id if customers else None),
-            User(email="vendor@woodcraft.com", hashed_password=hash_password("vendor123"), full_name="Vikram Mehta (Timber Supplier)", role="contact", contact_id=vendors[0].id if vendors else None)
+            User(login_id="admin_user", email="admin@urbanfurniture.com", hashed_password=hash_password("admin123"), full_name="Aakash Jayani (Owner)", role="admin"),
+            User(login_id="accountant", email="accountant@urbanfurniture.com", hashed_password=hash_password("accountant123"), full_name="Chandan Shah (Chief Accountant)", role="invoicing_user"),
+            User(login_id="rudra_clerk", email="clerk@urbanfurniture.com", hashed_password=hash_password("clerk123"), full_name="Rudra Patel (Ledger Officer)", role="invoicing_user"),
+            User(login_id="customer_1", email="customer@tejas.com", hashed_password=hash_password("customer123"), full_name="Tejas Sharma (Client Portal)", role="contact", contact_id=customers[0].id if customers else None),
+            User(login_id="vendor_user", email="vendor@woodcraft.com", hashed_password=hash_password("vendor123"), full_name="Vikram Mehta (Timber Supplier)", role="contact", contact_id=vendors[0].id if vendors else None)
         ]
         db.add_all(users)
         db.flush()
@@ -222,7 +222,7 @@ def seed_database(force: bool = False):
             db.add(b)
         db.flush()
 
-        print("Seeding Initial Equity Capital (₹75,000)...")
+        print("Seeding Initial Equity Capital (INR 75,000)...")
         gen_journal = journal_map["general"]
         bank_journal = journal_map["bank"]
         cash_journal = journal_map["cash"]

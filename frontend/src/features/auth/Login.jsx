@@ -85,28 +85,39 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label>Email Address</label>
+              <label className="text-xs font-bold">Login Id</label>
               <input
-                type="email"
+                type="text"
                 required
+                placeholder="Enter Login Id or Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full"
+                className="w-full text-sm"
               />
             </div>
             <div>
-              <label>Password</label>
+              <label className="text-xs font-bold">Password</label>
               <input
                 type="password"
                 required
+                placeholder="Enter Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full"
+                className="w-full text-sm"
               />
             </div>
             <button type="submit" disabled={loading} className="primary-button w-full mt-2">
-              {loading ? 'Authenticating...' : 'Sign In'}
+              {loading ? 'Authenticating...' : 'SIGN IN'}
             </button>
+            <div className="flex items-center justify-center gap-3 pt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <Link to="/forgot-password" className="hover:text-amber-500 transition">
+                Forgot Password
+              </Link>
+              <span>|</span>
+              <Link to="/signup" className="font-bold text-amber-600 hover:text-amber-500 transition dark:text-amber-400">
+                Sign Up
+              </Link>
+            </div>
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-200/80 dark:border-amber-500/20">

@@ -2,6 +2,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
 import { ThemeProvider } from './features/theme/ThemeContext';
 import Login from './features/auth/Login';
+import SignUp from './features/auth/SignUp';
+import ForgotPassword from './features/auth/ForgotPassword';
+import UserList from './features/auth/UserList';
+import CreateUser from './features/auth/CreateUser';
 import LandingPage from './features/landing/LandingPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import ContactList from './features/contacts/ContactList';
@@ -46,6 +50,8 @@ function App() {
           <Routes>
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/portal" element={<ContactRoute><ContactPortal /></ContactRoute>} />
             <Route path="/" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
               <Route index element={<DashboardHome />} />
@@ -68,6 +74,8 @@ function App() {
               <Route path="reports" element={<BudgetReport />} />
               <Route path="reports/balance-sheet" element={<BalanceSheet />} />
               <Route path="reports/profit-loss" element={<ProfitLoss />} />
+              <Route path="users" element={<UserList />} />
+              <Route path="users/new" element={<CreateUser />} />
             </Route>
           </Routes>
         </Router>

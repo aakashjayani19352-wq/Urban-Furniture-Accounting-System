@@ -43,13 +43,30 @@ export const AuthProvider = ({ children }) => {
     return newUser;
   };
 
+  const signUp = async (userData) => {
+    const data = await apiClient.signup(userData);
+    return data;
+  };
+
+  const forgotPassword = async (loginOrEmail, newPassword) => {
+    return await apiClient.forgotPassword(loginOrEmail, newPassword);
+  };
+
+  const createUser = async (userData) => {
+    return await apiClient.createUser(userData);
+  };
+
+  const getUsers = async () => {
+    return await apiClient.getUsers();
+  };
+
   const logout = () => {
     apiClient.logout();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login: setRoleDirectly, loginWithCredentials, logout }}>
+    <AuthContext.Provider value={{ user, login: setRoleDirectly, loginWithCredentials, signUp, forgotPassword, createUser, getUsers, logout }}>
       {children}
     </AuthContext.Provider>
   );

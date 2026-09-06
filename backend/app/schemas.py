@@ -3,18 +3,73 @@ from typing import Optional, List, Literal
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 
 # Auth & User Schemas
+import re
+from pydantic import field_validator
+
+def validate_password_complexity(v: str) -> str:
+    if len(v) <= 8:
+        raise ValueError("Password must have more than 8 characters")
+    if not re.search(r"[a-z]", v):
+        raise ValueError("Password must contain at least one lowercase letter")
+    if not re.search(r"[A-Z]", v):
+        raise ValueError("Password must contain at least one uppercase letter")
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>\-_]", v):
+        raise ValueError("Password must contain at least one special character")
+    return v
+
+def validate_login_id(v: Optional[str]) -> Optional[str]:
+    if v is not None:
+        v = v.strip()
+        if len(v) < 6 or len(v) > 12:
+            raise ValueError("Login Id must be between 6 and 12 characters")
+        if not re.match(r"^[a-zA-Z0-9_]+$", v):
+            raise ValueError("Login Id must only contain alphanumeric characters and underscores")
+    return v
+
 class UserCreate(BaseModel):
+    login_id: Optional[str] = None
     email: EmailStr
-    password: str = Field(..., min_length=4)
+    password: str
     full_name: str
     role: str = "invoicing_user" # admin, invoicing_user, contact
 
+    @field_validator("password")
+    @classmethod
+    def check_password(cls, v: str) -> str:
+        return validate_password_complexity(v)
+
+    @field_validator("login_id")
+    @classmethod
+    def check_login_id(cls, v: Optional[str]) -> Optional[str]:
+        return validate_login_id(v)
+
 class UserLogin(BaseModel):
-    email: EmailStr
+    login_id: Optional[str] = None
+    email: Optional[str] = None
     password: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_login_identifier(cls, data):
+        if isinstance(data, dict):
+            identifier = data.get("login_id") or data.get("email")
+            if not identifier:
+                raise ValueError("Login Id or Email is required")
+            data["login_id"] = identifier
+        return data
+
+class PasswordResetRequest(BaseModel):
+    login_or_email: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def check_new_password(cls, v: str) -> str:
+        return validate_password_complexity(v)
 
 class UserResponse(BaseModel):
     id: int
+    login_id: Optional[str] = None
     email: str
     full_name: str
     role: str

@@ -173,20 +173,54 @@ export const apiClient = {
   },
 
   // Auth Helpers
-  login: async (email, password) => {
+  login: async (login_id, password) => {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ login_id, password })
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: 'Invalid credentials' }));
-      throw new Error(err.detail || 'Login failed');
+      const err = await res.json().catch(() => ({ detail: 'Invalid Login Id or Password' }));
+      throw new Error(err.detail || 'Invalid Login Id or Password');
     }
     const data = await res.json();
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('user', JSON.stringify(data.user));
     return data;
+  },
+
+  signup: async (userData) => {
+    const res = await fetch(`${API_BASE_URL}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Registration failed' }));
+      throw new Error(err.detail || 'Registration failed');
+    }
+    return await res.json();
+  },
+
+  forgotPassword: async (login_or_email, new_password) => {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login_or_email, new_password })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Reset password failed' }));
+      throw new Error(err.detail || 'Reset password failed');
+    }
+    return await res.json();
+  },
+
+  getUsers: async () => {
+    return await apiClient.get('/auth/users');
+  },
+
+  createUser: async (userData) => {
+    return await apiClient.post('/auth/users', userData);
   },
 
   logout: () => {
