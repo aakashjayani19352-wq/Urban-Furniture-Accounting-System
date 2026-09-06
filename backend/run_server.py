@@ -3,14 +3,17 @@ import time
 import traceback
 import uvicorn
 
+import os
+
 if __name__ == '__main__':
+    port = int(os.getenv("PORT", 8001))
     while True:
         try:
-            print("Starting Urban Accounting API on http://0.0.0.0:8000 ...", flush=True)
+            print(f"Starting Urban Accounting API on http://0.0.0.0:{port} ...", flush=True)
             uvicorn.run(
                 "app.main:app",
                 host="0.0.0.0",
-                port=8000,
+                port=port,
                 log_level="info"
             )
             print("Uvicorn exited, restarting in 1s...", flush=True)
