@@ -27,9 +27,6 @@ export default function DashboardLayout() {
           <NavLink end to="/" className={navLink}>
             <span className="text-base">⌂</span> Dashboard Overview
           </NavLink>
-          <NavLink to="/live-demo" className={navLink}>
-            <span className="text-base text-emerald-500 font-bold">▶</span> Live Process Demo
-          </NavLink>
 
           <div className="px-3 pb-2 pt-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-amber-400/70">
             Master Data
@@ -93,13 +90,6 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
-            <NavLink
-              to="/live-demo"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs shadow hover:bg-emerald-700 transition"
-            >
-              ▶ Live Workflow
-            </NavLink>
-
             <button
               onClick={toggleTheme}
               className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition dark:border-amber-500/20 dark:bg-slate-800/80 dark:text-amber-200 dark:hover:bg-slate-700/80"
