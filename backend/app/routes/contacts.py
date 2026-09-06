@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Contact, User
+from app.models import Contact, User, Invoice, SalesOrder, PurchaseOrder
 from app.schemas import ContactCreate, ContactResponse
 from app.auth import get_current_user, require_role, get_contact_id_for_user
 
@@ -77,6 +77,30 @@ def delete_contact(
     contact = db.query(Contact).filter(Contact.id == id).first()
     if not contact:
         raise HTTPException(status_code=404, detail="Contact not found")
+
+    # Check for linked financial documents in the ledger
+    linked_invoices = db.query(Invoice).filter(Invoice.contact_id == id).count()
+    linked_so = db.query(SalesOrder).filter(SalesOrder.customer_id == id).count()
+    linked_po = db.query(PurchaseOrder).filter(PurchaseOrder.vendor_id == id).count()
+
+    if linked_invoices > 0 or linked_so > 0 or linked_po > 0:
+        docs = []
+        if linked_invoices:
+            docs.append(f"{linked_invoices} invoice(s)/bill(s)")
+        if linked_so:
+            docs.append(f"{linked_so} sales order(s)")
+        if linked_po:
+            docs.append(f"{linked_po} purchase order(s)")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete contact '{contact.name}': has {', '.join(docs)} linked in the financial ledger."
+        )
+
+    # Disassociate any linked users first
+    linked_users = db.query(User).filter(User.contact_id == id).all()
+    for u in linked_users:
+        u.contact_id = None
+
     db.delete(contact)
     db.commit()
     return None

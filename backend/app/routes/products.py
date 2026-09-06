@@ -2,7 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Product, User
+from app.models import Product, User, SalesOrder, PurchaseOrder
 from app.schemas import ProductCreate, ProductResponse
 from app.auth import get_current_user, require_role
 
@@ -71,6 +71,20 @@ def delete_product(
     product = db.query(Product).filter(Product.id == id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    linked_so = db.query(SalesOrder).filter(SalesOrder.product_id == id).count()
+    linked_po = db.query(PurchaseOrder).filter(PurchaseOrder.product_id == id).count()
+    if linked_so > 0 or linked_po > 0:
+        docs = []
+        if linked_so:
+            docs.append(f"{linked_so} sales order(s)")
+        if linked_po:
+            docs.append(f"{linked_po} purchase order(s)")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete product '{product.name}': has {', '.join(docs)} linked to it in the ledger."
+        )
+
     db.delete(product)
     db.commit()
     return None
