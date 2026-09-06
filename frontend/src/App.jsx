@@ -23,6 +23,7 @@ import BalanceSheet from './features/reports/BalanceSheet';
 import ProfitLoss from './features/reports/ProfitLoss';
 import DashboardHome from './features/dashboard/DashboardHome';
 import ContactPortal from './features/contacts/ContactPortal';
+import AboutPage from './features/about/AboutPage';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -46,9 +47,11 @@ function App() {
           <Routes>
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/portal" element={<ContactRoute><ContactPortal /></ContactRoute>} />
             <Route path="/" element={<PrivateRoute><DashboardLayout /></PrivateRoute>}>
               <Route index element={<DashboardHome />} />
+              <Route path="about" element={<AboutPage />} />
               <Route path="contacts" element={<ContactList />} />
               <Route path="contacts/new" element={<ContactForm />} />
               <Route path="products" element={<ProductList />} />

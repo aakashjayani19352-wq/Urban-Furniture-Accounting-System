@@ -1,4 +1,4 @@
-﻿# 🏢 Urban Furniture Accounting System
+# 🏢 Urban Furniture Accounting System
 
 > **A production-grade, double-entry accounting and financial ERP system designed specifically for the Urban Furniture enterprise workflow.**  
 > Built with FastAPI, SQLite / PostgreSQL, React 19, Tailwind CSS, and Recharts.
@@ -21,7 +21,7 @@ In addition to core ledgers, the platform includes **Analytic Accounting & Cost 
 |---|---|---|
 | **Aakash Jayani** | [@aakashjayani19352-wq](https://github.com/aakashjayani19352-wq) | **Full-Stack Lead & Integration**: Complete frontend UI/UX, 19 interactive screens & modals, Recharts dashboards, API client, repository architecture & integration. |
 | **Chandan Shah** | [@chandan-shah226](https://github.com/chandan-shah226) | **Backend Core & Architecture**: FastAPI application setup, SQLite/PostgreSQL database models, RESTful endpoints, seed data engine, JWT authentication & RBAC. |
-| **Rudra Patel** | [@rudraop922](https://github.com/rudraop922) | **Ledger & Accounting Engine**: Double-entry journal entry generation, transactional integrity validation, automated document posting workflows, and testing suites. |
+| **Rudra Patel** | [@Rudrapatel0806](https://github.com/Rudrapatel0806) | **Ledger & Accounting Engine**: Double-entry journal entry generation, transactional integrity validation, automated document posting workflows, and testing suites. |
 
 ---
 
@@ -171,8 +171,8 @@ pip install -r requirements.txt
 # Run the API server
 python run.py
 ```
-- **Backend API**: `http://localhost:8000`
-- **Interactive Swagger Documentation**: `http://localhost:8000/docs`
+- **Backend API**: `http://localhost:8001`
+- **Interactive Swagger Documentation**: `http://localhost:8001/docs`
 - *Note*: The backend seamlessly defaults to an automated SQLite database (`urban_accounting.db`) if PostgreSQL is not configured, requiring zero external database configuration for local evaluation.
 
 ### 2. Frontend Setup (React + Vite)
