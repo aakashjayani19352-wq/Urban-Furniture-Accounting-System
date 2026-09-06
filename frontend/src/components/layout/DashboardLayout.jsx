@@ -72,13 +72,6 @@ export default function DashboardLayout() {
           <NavLink to="/reports" className={navLink}>
             <span className="text-base">▦</span> Budget Variance Report
           </NavLink>
-
-          <div className="px-3 pb-2 pt-6 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-amber-400/70">
-            System & Info
-          </div>
-          <NavLink to="/about" className={navLink}>
-            <span className="text-base">ℹ️</span> About & Team
-          </NavLink>
         </nav>
       </aside>
 

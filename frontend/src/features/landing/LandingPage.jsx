@@ -42,12 +42,6 @@ export default function LandingPage() {
             </Link>
 
             <div className="flex items-center gap-4">
-              <Link
-                to="/about"
-                className="hidden sm:inline-block text-xs font-semibold text-amber-200/90 hover:text-amber-300 transition"
-              >
-                About & Team
-              </Link>
               <button
                 onClick={toggleTheme}
                 className="rounded-xl border border-amber-500/20 bg-slate-900/60 px-3.5 py-2 text-xs font-semibold text-amber-200 hover:bg-slate-800/80 transition backdrop-blur-md"
@@ -179,7 +173,6 @@ export default function LandingPage() {
           <div className="mx-auto flex max-w-7xl items-center justify-between text-xs text-slate-400">
             <div>© 2026 Urban Accounting. Double-Entry Accounting & ERP Engine.</div>
             <div className="flex gap-4">
-              <Link to="/about" className="hover:text-amber-300 transition font-medium">About & Team</Link>
               <Link to="/login" className="hover:text-amber-300 transition font-medium">Sign In</Link>
             </div>
           </div>
